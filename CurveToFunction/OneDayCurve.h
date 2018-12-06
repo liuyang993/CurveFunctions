@@ -17,6 +17,11 @@
 #include "ThostFtdcMdApi.h"              //CTP head file
 #include "ThostFtdcTraderApi.h"
 
+
+#include "tbx_cli.h"
+#include "tbx_cli_tools.h"
+
+
 #pragma comment( lib, "odbc32.lib" )
 
 
@@ -146,7 +151,7 @@ public:    //about timer
 	//	PTP_TIMER             Timer
  //   );
 
-
+	TBX_CLI_TOOLS_HANDLE			hTbxCliTools;
 
 };
 

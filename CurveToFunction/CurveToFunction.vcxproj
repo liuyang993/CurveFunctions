@@ -20,7 +20,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v110</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -56,7 +56,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>thosttraderapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>thosttraderapi.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -78,6 +78,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="OneDayCurve.h" />
+    <ClInclude Include="tbx_cli.h" />
+    <ClInclude Include="tbx_cli_tools.h" />
+    <ClInclude Include="tbx_cli_tools_private.h" />
+    <ClInclude Include="tbx_id.h" />
+    <ClInclude Include="tbx_msg.h" />
+    <ClInclude Include="tbx_ostypes.h" />
+    <ClInclude Include="tbx_os_wrapper.h" />
+    <ClInclude Include="tbx_result.h" />
+    <ClInclude Include="tbx_std.h" />
     <ClInclude Include="ThostFtdcMdApi.h" />
     <ClInclude Include="ThostFtdcTraderApi.h" />
     <ClInclude Include="ThostFtdcUserApiDataType.h" />
@@ -87,6 +96,10 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="OneDayCurve.cpp" />
+    <ClCompile Include="tbx_cli.c" />
+    <ClCompile Include="tbx_cli_parse.c" />
+    <ClCompile Include="tbx_cli_tools.c" />
+    <ClCompile Include="tbx_cli_tools_utils.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

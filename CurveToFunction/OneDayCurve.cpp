@@ -66,6 +66,56 @@ OneDayCurve::OneDayCurve(int y,int m,int d,std::string sContractName)
 	DBTableName = sContractName.substr(0,2) + commonFuctions::toString(y) + sMonth + sDay;
 
 
+	 /********************************************
+	 * init cli console window
+	 ********************************************/
+
+	/*TBX_CLI_TOOLS_HANDLE			hTbxCliTools;*/
+
+	TBX_CLI_TOOLS_INIT_PARAMS	CliToolsParams;
+
+	/* Prepare the CLI Tools parameters */
+	memset( &CliToolsParams, 0, sizeof(CliToolsParams) );
+	CliToolsParams.un32MaxScreenWidth		= 256;
+	CliToolsParams.un32MaxScreenHeight		= 150;
+	CliToolsParams.un32MinScreenWidth		= 80;
+	CliToolsParams.un32MinScreenHeight		= 24;
+
+	CliToolsParams.un32MaxPromptLines		= 1;
+	CliToolsParams.un32LogBufferMaxLines    = 10000;
+	CliToolsParams.fLowPrioryThread			= TBX_TRUE;
+
+
+
+	CliToolsParams.un32DefaultScreenWidth	= 80;
+	CliToolsParams.un32DefaultScreenHeight	= 24;
+
+	CliToolsParams.fDisplayLog				= TBX_TRUE;
+	CliToolsParams.un32MaxRefreshDelay		= 250;
+	CliToolsParams.un32MinClsDelay			= 10;
+	CliToolsParams.fFlushLogOnlyOnError	= TBX_FALSE;
+
+	strcpy( CliToolsParams.szLogFileName, "tbtoolpack_service" );
+	CliToolsParams.un32LogBufferMaxLines	= 1000;
+	CliToolsParams.un32MaxLogFileSize		= 1024*1024;
+	CliToolsParams.un32MinRefreshDelay		= 50;
+	CliToolsParams.fDisableTerminalInput	= TBX_FALSE;
+	CliToolsParams.fDisableTerminalOutput	= TBX_FALSE;
+
+
+	/* Menu choice handler */
+	//CliToolsParams.pFctHandleMenuChoice	= HandleChoice;
+	//CliToolsParams.pCtxHandleMenuChoice	= NULL;
+
+
+	
+
+	TBX_RESULT Result = TbxCliToolsInit( &CliToolsParams, &hTbxCliTools );
+
+	/* Launch the command-line thread */
+	Result = TbxCliToolsStart( hTbxCliTools );
+
+
 
 	//BOOL bRet = FALSE;
  //   PTP_TIMER timer = NULL;
@@ -402,7 +452,14 @@ double OneDayCurve::slope(const std::vector<time_t>& xaxis, const std::vector<do
     //}
 
 	double dResult = numerator / denominator;
-	printf("last 1 min slope is %f , and newe price is %f \n" , dResult,yaxis[0]);
+	//printf("last 1 min slope is %f , and newe price is %f \n" , dResult,yaxis[0]);
+
+	TbxCliToolsLogPrint
+	(
+		hTbxCliTools,
+		TRACE_LEVEL_3, FGREEN,
+		"last 1 min slope is %f , and newe price is %f \n" , dResult,yaxis[0]
+	);
 
     return dResult;
 
@@ -415,12 +472,29 @@ void OneDayCurve::judgeBuyOrSell()
 		return;
 
 
+			TbxCliToolsLogPrint
+		(
+			hTbxCliTools,
+			TRACE_LEVEL_3, FGREEN,
+			"cur slope is %f , and last 1 slope is %f , and last 2 slope is %f \n" , currentOneMinuteSlope,Last1TimeSlope,Last2TimeSlope
+		);
+
+
 	if((currentOneMinuteSlope>Last1TimeSlope)&&(Last1TimeSlope>Last2TimeSlope)&&(Last1TimeSlope!=0)&&(Last2TimeSlope!=0)&&(currentState==none))
 	{
 		//start raise , should buy
-		printf("cur slope is %f , and last 1 slope is %f , and last 2 slope is %f \n" , currentOneMinuteSlope,Last1TimeSlope,Last2TimeSlope);
+
+		TbxCliToolsLogPrint
+		(
+			hTbxCliTools,
+			TRACE_LEVEL_3, FGREEN,
+			"TbxCliToolsPrint: ",
+			"cur slope is %f , and last 1 slope is %f , and last 2 slope is %f \n" , currentOneMinuteSlope,Last1TimeSlope,Last2TimeSlope
+		);
+
+		//printf("cur slope is %f , and last 1 slope is %f , and last 2 slope is %f \n" , currentOneMinuteSlope,Last1TimeSlope,Last2TimeSlope);
 		
-		orderinsert(contractName.c_str(),"buy",y[0]+1);     //y[0] is newest price 
+		//orderinsert(contractName.c_str(),"buy",y[0]+1);     //y[0] is newest price 
 
 		//set state
 		currentState = buying;
@@ -431,9 +505,18 @@ void OneDayCurve::judgeBuyOrSell()
 
 	if((BuyingPrice+5<y[0])&&(currentState==buyed))     // over 5 poing profit 
 	{
-		printf("Last time buy alreay have 5 point profit now , will close it \n");
+
+		TbxCliToolsLogPrint
+		(
+			hTbxCliTools,
+			TRACE_LEVEL_3, FGREEN,
+			"TbxCliToolsPrint: Last time buy alreay have 5 point profit now , will close it \n "
+		);
+
+
+		//printf("Last time buy alreay have 5 point profit now , will close it \n");
 		
-		orderinsert(contractName.c_str(),"closebuy",y[0]-1);     //y[0] is newest price 
+		//orderinsert(contractName.c_str(),"closebuy",y[0]-1);     //y[0] is newest price 
 
 		currentState =  none;
 
@@ -442,9 +525,16 @@ void OneDayCurve::judgeBuyOrSell()
 
 	if((BuyingPrice-5 > y[0])&&(currentState==buyed))     // over 5 poing lose 
 	{
-		printf("Last time buy alreay have 5 point lose now , will close it \n");
+
+		TbxCliToolsLogPrint
+		(
+			hTbxCliTools,
+			TRACE_LEVEL_3, FGREEN,
+			"TbxCliToolsPrint: Last time buy alreay have 5 point lose now , will close it \n "
+		);
+		//printf("Last time buy alreay have 5 point lose now , will close it \n");
 		
-		orderinsert(contractName.c_str(),"closebuy",y[0]-1);     //y[0] is newest price 
+		//orderinsert(contractName.c_str(),"closebuy",y[0]-1);     //y[0] is newest price 
 
 		currentState =  none;
 
@@ -482,7 +572,14 @@ void OneDayCurve::connect()
 
     //输出API版本信息
 
-    printf("%s\n", m_ptraderapi->GetApiVersion());
+    //printf("%s\n", m_ptraderapi->GetApiVersion());
+
+				TbxCliToolsLogPrint
+		(
+			hTbxCliTools,
+			TRACE_LEVEL_3, FGREEN,
+			"%s\n", m_ptraderapi->GetApiVersion()
+		);
 
   }
 

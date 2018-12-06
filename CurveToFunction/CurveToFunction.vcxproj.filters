@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\TBCliHeads">
+      <UniqueIdentifier>{c93bd453-5500-4b58-a55e-4bdbb85f8491}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="OneDayCurve.h">
@@ -33,12 +36,51 @@
     <ClInclude Include="ThostFtdcUserApiStruct.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="tbx_cli.h">
+      <Filter>Header Files\TBCliHeads</Filter>
+    </ClInclude>
+    <ClInclude Include="tbx_cli_tools.h">
+      <Filter>Header Files\TBCliHeads</Filter>
+    </ClInclude>
+    <ClInclude Include="tbx_cli_tools_private.h">
+      <Filter>Header Files\TBCliHeads</Filter>
+    </ClInclude>
+    <ClInclude Include="tbx_id.h">
+      <Filter>Header Files\TBCliHeads</Filter>
+    </ClInclude>
+    <ClInclude Include="tbx_msg.h">
+      <Filter>Header Files\TBCliHeads</Filter>
+    </ClInclude>
+    <ClInclude Include="tbx_os_wrapper.h">
+      <Filter>Header Files\TBCliHeads</Filter>
+    </ClInclude>
+    <ClInclude Include="tbx_ostypes.h">
+      <Filter>Header Files\TBCliHeads</Filter>
+    </ClInclude>
+    <ClInclude Include="tbx_result.h">
+      <Filter>Header Files\TBCliHeads</Filter>
+    </ClInclude>
+    <ClInclude Include="tbx_std.h">
+      <Filter>Header Files\TBCliHeads</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="OneDayCurve.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tbx_cli_tools_utils.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tbx_cli_tools.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tbx_cli_parse.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tbx_cli.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
