@@ -1,6 +1,6 @@
 #include "OneDayCurve.h"
 #include "Util.h"
-
+#include "Timer.h"
 
 
 OneDayCurve::OneDayCurve(int y,int m,int d,std::string sContractName)
@@ -9,18 +9,24 @@ OneDayCurve::OneDayCurve(int y,int m,int d,std::string sContractName)
 	Last1TimeSlope=0;
 	Last2TimeSlope=0;
 
-	OrderRef=1;
+	OrderRef=1;     //  ref id 
 	nRequestID=1;
 	BuyingState=false;
 	SellingState=false;
 
     BuyingPrice=0;
 	SellingPrice=0;
+    BuyedPrice=0;
+	SelledPrice=0;
 	StopLoseBuyPrice=0;
 	StopLoseSellPrice=0;
 
+	dProfitFlyingStartSlope=0;
+
 	currentState=none;
 	dealRefNumber = 0;
+
+	ifOrdDealed = false;
 
 
 	year=y;
@@ -33,15 +39,39 @@ OneDayCurve::OneDayCurve(int y,int m,int d,std::string sContractName)
 
 	//tm* localtm = localtime(&currentTime);
 	std::tm* timeinfo;
-    char buffer [80];
 
     std::time(&currentTime);
     timeinfo = std::localtime(&currentTime);
 
-	std::strftime(buffer,80,"%Y-%m-%d-%H:%M:%S",timeinfo);
-    std::puts(buffer);
-	sCurrentTime = buffer;
+	sCurrentTime = commonFuctions::GetStringFromTM(timeinfo);
 
+#ifdef TRADETIME
+	if(timeinfo->tm_hour>12)
+	{
+		timeinfo->tm_hour = 15;
+		timeinfo->tm_min = 33;
+
+		sMYSQLQueryTime = commonFuctions::GetStringFromTM(timeinfo);
+	}
+
+	if(timeinfo->tm_hour<=12)
+	{
+		timeinfo->tm_hour = 11;
+		timeinfo->tm_min = 33;
+
+		sMYSQLQueryTime = commonFuctions::GetStringFromTM(timeinfo);
+	}
+#else
+	//timeinfo->tm_year=y-1900;
+	//timeinfo->tm_mon=m-1;
+	//timeinfo->tm_mday =d;
+	//timeinfo->tm_hour = 13;
+	//timeinfo->tm_min = 31;
+	//timeinfo->tm_sec = 0;
+
+	//sMYSQLQueryTime = commonFuctions::GetStringFromTM(timeinfo);
+
+#endif
 
 	// for rb only 
 	//if(timeinfo->tm_hour)
@@ -64,6 +94,9 @@ OneDayCurve::OneDayCurve(int y,int m,int d,std::string sContractName)
 
 
 	DBTableName = sContractName.substr(0,2) + commonFuctions::toString(y) + sMonth + sDay;
+
+	//char cTest [10] = {"aaaabbbb"};
+	//std::string s111 = commonFuctions::toString(cTest);
 
 
 	 /********************************************
@@ -115,6 +148,12 @@ OneDayCurve::OneDayCurve(int y,int m,int d,std::string sContractName)
 	/* Launch the command-line thread */
 	Result = TbxCliToolsStart( hTbxCliTools );
 
+	TbxCliToolsLogPrint
+	(
+		hTbxCliTools,
+		TRACE_LEVEL_3, FGREEN,
+		"class member start timer \n"
+	);
 
 
 	//BOOL bRet = FALSE;
@@ -318,26 +357,64 @@ void OneDayCurve::initMySQLConnection()
 
 void OneDayCurve::loadData()
 {
+
+	//special use for FuPan
+	std::tm* timeinfo1;
+	timeinfo1 = std::localtime(&currentTime);
+	timeinfo1->tm_year=year-1900; 
+	timeinfo1->tm_mon=month-1;
+	timeinfo1->tm_mday =day;
+	timeinfo1->tm_hour = 15;
+	timeinfo1->tm_min = 30;
+	timeinfo1->tm_sec = 0;
+
+	sMYSQLQueryTime = commonFuctions::GetStringFromTM(timeinfo1);
+
+
 	while(startLoadData)
 	{
 		x.clear();
 		y.clear();
 
-
 		//SQLCHAR* query = (SQLCHAR*)"select happentime,lastprice from rb20181201 where happentime<='2018-12-1 23:30:30' and hour(happentime)>=21  order by happentime desc limit 120" ;
 
-		SQLCHAR* query = (SQLCHAR*)"select * from rb20181207 where happentime<='2018-12-7 23:33:00' order by happentime desc limit 120" ;
+
+#ifdef TRADETIME
+		//std::string sQuery = "select * from rb20181204 where happentime<='" + sMYSQLQueryTime + "' order by happentime desc limit 120";
+
+		std::string sQuery = "select * from " + DBTableName +  " where happentime<='" + sMYSQLQueryTime + "' order by happentime desc limit 120";
+		SQLCHAR* query = (SQLCHAR*)(sQuery.c_str()) ;
+
+#else
+		std::string sQuery = "select * from rb20181204 where happentime<='" + sMYSQLQueryTime + "' order by happentime desc limit 120";
+		SQLCHAR* query = (SQLCHAR*)(sQuery.c_str()) ;
+
+#endif
+		//SQLCHAR* query = (SQLCHAR*)"select * from rb20181207 where happentime<='2018-12-7 15:33:00' order by happentime desc limit 120" ;
 	
 		CHECK( SQLExecDirectA( hStmt, query, SQL_NTS ), "execute query" ) ;
 
 		retCode = SQLFetch( hStmt ) ;
+
+		if(retCode!=0)
+		{
+			#ifdef TRADETIME
+					Sleep(3000);
+					continue;
+			#else
+					commonFuctions::addSecondsToTM(timeinfo1,3);
+					sMYSQLQueryTime = commonFuctions::GetStringFromTM(timeinfo1);
+					continue;
+
+			#endif
+
+		}
 
 		CHECK( retCode, "first sqlFetch" ) ;
 
 
 		SQLLEN numRows ;
 		retCode = SQLRowCount( hStmt, &numRows ) ;
-		//printf( "%d rows were fetched, ruff.\n", numRows ) ;
 
 		for( int i = 1 ; i <= numRows ; i++ )
 		{
@@ -389,7 +466,6 @@ void OneDayCurve::loadData()
 			  if( CHECK( retCode, "SqlGetData", false ) )
 			  {
 				// Print the data we got.
-				//printf( "%10s", buf ) ;
 			  }
 			}
    
@@ -398,7 +474,6 @@ void OneDayCurve::loadData()
 			if( !SQL_SUCCEEDED( retCode ) )
 			{
 				// SQLFetch FAILS AS IT FETCHES the last row of data.
-				//printf( "And %d is the LAST row.. we're not getting any more after this one\n", i ) ;
 				break;
 			}
 
@@ -416,7 +491,14 @@ void OneDayCurve::loadData()
 		judgeBuyOrSell();
 
 
+#ifdef TRADETIME
 		Sleep(3000);
+#else
+		Sleep(1000);
+		commonFuctions::addSecondsToTM(timeinfo1,3);
+		sMYSQLQueryTime = commonFuctions::GetStringFromTM(timeinfo1);
+
+#endif
 
 	}
 
@@ -426,6 +508,65 @@ void OneDayCurve::loadData()
 	SQLFreeHandle( SQL_HANDLE_ENV, hEnv ) ;
 
 
+}
+
+void OneDayCurve::onTimerout()
+{
+
+	TbxCliToolsLogPrint
+	(
+		hTbxCliTools,
+		TRACE_LEVEL_3, FGREEN,
+		"timeout event happen ,class member function incoke by thread \n"
+	);
+
+	if(!ifOrdDealed)
+	{
+		// order still not deal ,  cancel the order and re-order 
+
+		TbxCliToolsLogPrint
+		(
+			hTbxCliTools,
+			TRACE_LEVEL_3, FGREEN,
+			"previous order still not deal \n"
+		);
+		MyReqOrderAction();
+
+
+	   TbxCliToolsLogPrint
+	   (
+			hTbxCliTools,
+			TRACE_LEVEL_3, FGREEN,
+			"order canceled , now re - order \n"
+	   );
+
+	   if(currentState == buying)
+	   {
+		   orderinsert(contractName.c_str(),"buy",(int)BuyingPrice+1);
+		   BuyingPrice=BuyingPrice+1;
+	   }
+	   else if(currentState == selling)
+	   {
+		   orderinsert(contractName.c_str(),"buy",(int)SellingPrice-1);
+		   SellingPrice=SellingPrice-1;
+	   }
+
+
+	}
+	else
+	{
+		TbxCliToolsLogPrint
+		(
+			hTbxCliTools,
+			TRACE_LEVEL_3, FGREEN,
+			"previous order already deal \n"
+		);
+
+	}
+
+
+
+	return;
 }
 
 
@@ -452,13 +593,13 @@ double OneDayCurve::slope(const std::vector<time_t>& xaxis, const std::vector<do
     //}
 
 	double dResult = numerator / denominator;
-	//printf("last 1 min slope is %f , and newe price is %f \n" , dResult,yaxis[0]);
+
 
 	TbxCliToolsLogPrint
 	(
 		hTbxCliTools,
 		TRACE_LEVEL_3, FGREEN,
-		"last 1 min slope is %f , and newe price is %f \n" , dResult,yaxis[0]
+		"last 1 min slope is %f , and new price is %6.2f \n" , dResult,yaxis[0]
 	);
 
     return dResult;
@@ -471,75 +612,198 @@ void OneDayCurve::judgeBuyOrSell()
 	if((Last1TimeSlope==0)||(Last2TimeSlope==0)||(currentOneMinuteSlope==0))
 		return;
 
+	if((currentState == buying)&&(y[0]>BuyingPrice+5))
+	{
+		MyReqOrderAction();
+	
+	}
 
-			TbxCliToolsLogPrint
-		(
-			hTbxCliTools,
-			TRACE_LEVEL_3, FGREEN,
-			"cur slope is %f , and last 1 slope is %f , and last 2 slope is %f \n" , currentOneMinuteSlope,Last1TimeSlope,Last2TimeSlope
-		);
+	//orderinsert(contractName.c_str(),"buy",3360); 
 
 
 	if((currentOneMinuteSlope>Last1TimeSlope)&&(Last1TimeSlope>Last2TimeSlope)&&(Last1TimeSlope!=0)&&(Last2TimeSlope!=0)&&(currentState==none))
 	{
 		//start raise , should buy
+		TbxCliToolsLogPrint
+		(
+			hTbxCliTools,
+			TRACE_LEVEL_3, FGREEN,
+			"now slope :%f,last time slope :%f,last 2 time slope :%f,plan buy at %6.2f \n" , currentOneMinuteSlope,Last1TimeSlope,Last2TimeSlope,y[0]+1
+		);
+
+#ifdef TRADETIME
+		orderinsert(contractName.c_str(),"buy",y[0]+1);     //y[0] is newest price 
+		currentState = buying;
+		BuyingPrice = y[0]+1;
+
+#else
+		currentState = buyed;
+		BuyedPrice = y[0]+1;
+
+#endif
+		//and in orderinsert function , will record dealRefNumber 
+	}
+
+	if((BuyedPrice+5<y[0])&&(currentState==buyed))     // over 5 poing profit 
+	{
 
 		TbxCliToolsLogPrint
 		(
 			hTbxCliTools,
 			TRACE_LEVEL_3, FGREEN,
-			"TbxCliToolsPrint: ",
-			"cur slope is %f , and last 1 slope is %f , and last 2 slope is %f \n" , currentOneMinuteSlope,Last1TimeSlope,Last2TimeSlope
+			"TradeCurve: Last time buy alreay have 5 point profit now , try to let profit fly \n "
 		);
 
-		//printf("cur slope is %f , and last 1 slope is %f , and last 2 slope is %f \n" , currentOneMinuteSlope,Last1TimeSlope,Last2TimeSlope);
-		
-		//orderinsert(contractName.c_str(),"buy",y[0]+1);     //y[0] is newest price 
+		dProfitFlyingStartSlope = currentOneMinuteSlope;
+		dProfitFlyingStartprice=y[0];
 
-		//set state
-		currentState = buying;
+
+		////重置斜率 避免刚止盈还买的情况
+
+	 //   Last1TimeSlope=0;
+		//Last2TimeSlope=0;
+		//currentOneMinuteSlope=0;
+
+		
+#ifdef TRADETIME
+		//orderinsert(contractName.c_str(),"closebuy",y[0]-1);     //y[0] is newest price 
+
+		currentState =  profitFlying;
+#else
+		currentState =  profitFlying;
+#endif
+
+	}
+	 
+
+	if((currentOneMinuteSlope>dProfitFlyingStartSlope)&&(currentState==profitFlying))
+	{
+		dProfitFlyingStartSlope=currentOneMinuteSlope;
+		dProfitFlyingStartprice = y[0];
+
+	}
+
+	if((currentOneMinuteSlope<dProfitFlyingStartSlope)&&(y[0]<dProfitFlyingStartprice)&&(currentState==profitFlying))
+	{
+		TbxCliToolsLogPrint
+		(
+			hTbxCliTools,
+			TRACE_LEVEL_3, FGREEN,
+			"TradeCurve: during profit flying state ,1 min slope begin down,close it \n "
+		);
+
+		//止盈
+		
+		//重置斜率 避免刚止盈还买的情况
+	    Last1TimeSlope=0;
+		Last2TimeSlope=0;
+		currentOneMinuteSlope=0;
+
+		
+
+#ifdef TRADETIME
+		//orderinsert(contractName.c_str(),"closebuy",y[0]-1);     //y[0] is newest price 
+
+		currentState =  none;
+#else
+		currentState =  none;
+#endif
+
+	}
+
+
+	if((BuyedPrice-5 > y[0])&&(currentState==buyed))     // over 5 poing lose 
+	{
+
+		TbxCliToolsLogPrint
+		(
+			hTbxCliTools,
+			TRACE_LEVEL_3, FGREEN,
+			"TradeCurve: Last time buy alreay have 5 point lose now , will close it \n "
+		);
+
+#ifdef TRADETIME
+		
+		orderinsert(contractName.c_str(),"closebuy",y[0]-1);     //y[0] is newest price 
+		currentState =  none;
+#else
+		currentState =  none;
+#endif
+	}
+
+
+
+	//sell part 
+	if((currentOneMinuteSlope<Last1TimeSlope)&&(Last1TimeSlope<Last2TimeSlope)&&(Last1TimeSlope!=0)&&(Last2TimeSlope!=0)&&(currentState==none))
+	{
+		//start raise , should buy
+		TbxCliToolsLogPrint
+		(
+			hTbxCliTools,
+			TRACE_LEVEL_3, FGREEN,
+			"now slope :%f,last time slope :%f,last 2 time slope :%f,plan sell at %6.2f \n" , currentOneMinuteSlope,Last1TimeSlope,Last2TimeSlope,y[0]-1
+		);
+
+#ifdef TRADETIME
+		orderinsert(contractName.c_str(),"sell",y[0]-1);     //y[0] is newest price 
+		currentState = selling;
+		SellingPrice = y[0]-1;
+#else
+		currentState = selled;
+		SelledPrice = y[0]-1;
+#endif
+
 
 		//and in orderinsert function , will record dealRefNumber 
-
 	}
 
-	if((BuyingPrice+5<y[0])&&(currentState==buyed))     // over 5 poing profit 
+
+	if((SelledPrice>y[0]+5)&&(currentState==selled))     // over 5 poing profit 
 	{
 
 		TbxCliToolsLogPrint
 		(
 			hTbxCliTools,
 			TRACE_LEVEL_3, FGREEN,
-			"TbxCliToolsPrint: Last time buy alreay have 5 point profit now , will close it \n "
+			"TradeCurve: Last time sell alreay have 5 point profit now , will close it \n "
 		);
 
+		//重置斜率 避免刚止盈还买的情况
 
-		//printf("Last time buy alreay have 5 point profit now , will close it \n");
-		
-		//orderinsert(contractName.c_str(),"closebuy",y[0]-1);     //y[0] is newest price 
+	    Last1TimeSlope=0;
+		Last2TimeSlope=0;
+		currentOneMinuteSlope=0;
+
+
+#ifdef TRADETIME		
+		orderinsert(contractName.c_str(),"closesell",y[0]+1);     //y[0] is newest price 
 
 		currentState =  none;
+#else
+		currentState =  none;
+#endif
 
 	}
 
 
-	if((BuyingPrice-5 > y[0])&&(currentState==buyed))     // over 5 poing lose 
+	if((SelledPrice+5 < y[0])&&(currentState==selled))     // over 5 poing lose 
 	{
 
 		TbxCliToolsLogPrint
 		(
 			hTbxCliTools,
 			TRACE_LEVEL_3, FGREEN,
-			"TbxCliToolsPrint: Last time buy alreay have 5 point lose now , will close it \n "
+			"TradeCurve: Last time sell alreay have 5 point lose now , will close it \n "
 		);
-		//printf("Last time buy alreay have 5 point lose now , will close it \n");
 		
-		//orderinsert(contractName.c_str(),"closebuy",y[0]-1);     //y[0] is newest price 
-
+#ifdef TRADETIME	
+		orderinsert(contractName.c_str(),"closesell",y[0]+1);     //y[0] is newest price 
 		currentState =  none;
+#else
+		currentState =  none;
+#endif
 
 	}
-
 
 
 
@@ -549,7 +813,7 @@ void OneDayCurve::judgeBuyOrSell()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void OneDayCurve::connect()
+void OneDayCurve::connectCTP()
 {
 
     //创建API实例
@@ -563,8 +827,15 @@ void OneDayCurve::connect()
     m_ptraderapi->SubscribePrivateTopic(THOST_TERT_QUICK); //设置私有流订阅模式
 
     //m_ptraderapi->RegisterFront("tcp://127.0.0.1:41205");
+	  
 
-	m_ptraderapi->RegisterFront("tcp://180.168.146.187:10000");
+#ifdef ONLYTESTAPI
+	m_ptraderapi->RegisterFront("tcp://180.168.146.187:10030");     //非交易时间只测试API连这个 
+
+#else
+	m_ptraderapi->RegisterFront("tcp://180.168.146.187:10000");     //交易时间连这个 
+
+#endif 
 
 	  
 
@@ -572,13 +843,13 @@ void OneDayCurve::connect()
 
     //输出API版本信息
 
-    //printf("%s\n", m_ptraderapi->GetApiVersion());
+
 
 				TbxCliToolsLogPrint
 		(
 			hTbxCliTools,
 			TRACE_LEVEL_3, FGREEN,
-			"%s\n", m_ptraderapi->GetApiVersion()
+			"CTP API %s\n", m_ptraderapi->GetApiVersion()
 		);
 
   }
@@ -693,9 +964,61 @@ void OneDayCurve::orderinsert(const char* HeYunName,const char* BuyOrSell,int iP
 
     //strcpy_s(t.OrderRef, "0000001");
 
-    while (m_ptraderapi->ReqOrderInsert(&t, 3) != 0) Sleep(1000);
+    while (m_ptraderapi->ReqOrderInsert(&t, nRequestID++) != 0)
+	{
+		Sleep(500);
+
+	}
+
+	TbxCliToolsLogPrint
+   (
+		hTbxCliTools,
+		TRACE_LEVEL_3, FGREEN,
+		"success ordered %s at price %d, now start timer \n",BuyOrSell,iPrice
+   );
+
+	timer::Timer* serverTimer = new timer::Timer([this]{onTimerout();},200);
+	serverTimer->start();
+	
+
+
 }
 
+
+void OneDayCurve::MyReqOrderAction()   //撤单
+{
+	CThostFtdcInputOrderActionField a = { 0 };
+
+	strcpy_s(a.BrokerID, "9999");
+
+	strcpy_s(a.InvestorID, "131888");
+
+	strcpy_s(a.UserID, "131888");
+
+	strcpy_s(a.OrderSysID,sOrderSysID.c_str());  //对应要撤报单的OrderSysID
+
+	strcpy_s(a.ExchangeID, "SHFE");
+
+	strcpy_s(a.InstrumentID, "rb1905");
+	
+
+	a.ActionFlag = THOST_FTDC_AF_Delete;
+
+	while (m_ptraderapi->ReqOrderAction(&a, nRequestID++) != 0) 
+	{
+		TbxCliToolsLogPrint
+		(
+			hTbxCliTools,
+			TRACE_LEVEL_3, FGREEN,
+			"CTP:cancle order not success \n"
+		);
+		
+		Sleep(500);
+
+	}
+
+
+}
  
 
   //查询合约
@@ -718,7 +1041,13 @@ void OneDayCurve::qryInstrument()
 void OneDayCurve::OnFrontConnected()
 {
 
-   printf("OnFrontConnected\n");
+   TbxCliToolsLogPrint
+   (
+		hTbxCliTools,
+		TRACE_LEVEL_3, FGREEN,
+		"CTP:OnFrontConnected \n"
+   );
+
 
 }
 
@@ -728,7 +1057,13 @@ void OneDayCurve::OnFrontConnected()
 void OneDayCurve::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
 
-   printf("OnRspUserLogin\n");
+
+   TbxCliToolsLogPrint
+   (
+		hTbxCliTools,
+		TRACE_LEVEL_3, FGREEN,
+		"CTP:OnRspUserLogin \n"
+   );
 }
 
  
@@ -737,7 +1072,12 @@ void OneDayCurve::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CTh
 void OneDayCurve::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *pSettlementInfoConfirm, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
 
-    printf("OnRspSettlementInfoConfirm\n");
+   TbxCliToolsLogPrint
+   (
+		hTbxCliTools,
+		TRACE_LEVEL_3, FGREEN,
+		"CTP:OnRspSettlementInfoConfirm \n"
+   );
 }
 
  
@@ -746,7 +1086,12 @@ void OneDayCurve::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmFiel
 void OneDayCurve::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
 
-   printf("OnRspQryInstrument\n");
+   TbxCliToolsLogPrint
+   (
+		hTbxCliTools,
+		TRACE_LEVEL_3, FGREEN,
+		"CTP:OnRspQryInstrument \n"
+   );
 }
 
  
@@ -754,7 +1099,16 @@ void OneDayCurve::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CTh
   //报单通知
 void OneDayCurve::OnRtnOrder(CThostFtdcOrderField *pOrder)
 {
-      printf("OnRtnOrder\n");
+
+	TbxCliToolsLogPrint
+   (
+		hTbxCliTools,
+		TRACE_LEVEL_3, FGREEN,
+		"CTP:OnRtnOrder \n"
+   );
+   
+	sOrderSysID = commonFuctions::toString(pOrder->OrderSysID);
+
 }
 
   
@@ -765,17 +1119,21 @@ void OneDayCurve::OnRtnTrade(CThostFtdcTradeField *pTrade)
 	if(atoi(pTrade->OrderRef)!=dealRefNumber)    // maybe manual deal 
 		return;
 
+	ifOrdDealed = true;
+
 	switch (currentState)
 	{
 	case none:
 		break;
 	case buying:
 		currentState=buyed;
-		BuyingPrice = pTrade->Price;
+		BuyedPrice = pTrade->Price;
 		break;
 	case buyed:
 		break;
 	case selling:
+		currentState=selled;
+		SelledPrice = pTrade->Price;
 		break;
 	case selled:
 		break;
@@ -784,9 +1142,15 @@ void OneDayCurve::OnRtnTrade(CThostFtdcTradeField *pTrade)
 	}
 	
 	
-	
-	
-	//printf("OnRtnTrade\n");
+
+
+		TbxCliToolsLogPrint
+   (
+		hTbxCliTools,
+		TRACE_LEVEL_3, FGREEN,
+		"CTP:OnRtnTrade \n"
+   );
+
 }
 
  
@@ -795,7 +1159,12 @@ void OneDayCurve::OnRtnTrade(CThostFtdcTradeField *pTrade)
 void OneDayCurve::OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
 
-   printf("OnRspOrderInsert\n");
+		TbxCliToolsLogPrint
+   (
+		hTbxCliTools,
+		TRACE_LEVEL_3, FGREEN,
+		"CTP:OnRspOrderInsert \n"
+   );
 }
 
   
@@ -804,7 +1173,14 @@ void OneDayCurve::OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThos
 void OneDayCurve::OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
 
-  printf("OnRspError\n");
+
+  		TbxCliToolsLogPrint
+   (
+		hTbxCliTools,
+		TRACE_LEVEL_3, FGREEN,
+		"CTP:OnRspError \n"
+   );
+
 
 }
 
@@ -827,5 +1203,14 @@ void OneDayCurve::QryAccount()
 
 void OneDayCurve::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
-	  printf("OnRspQryTradingAccount\n");
+
+
+	  
+  		TbxCliToolsLogPrint
+   (
+		hTbxCliTools,
+		TRACE_LEVEL_3, FGREEN,
+		"CTP:OnRspQryTradingAccount \n"
+   );
+
 }

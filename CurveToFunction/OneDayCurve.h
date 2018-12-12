@@ -35,6 +35,7 @@ enum DealState
 {
 	none=1,
 	buying,
+	profitFlying,
 	buyed,
 	selling,
 	selled,
@@ -62,7 +63,7 @@ public:
 
 	time_t currentTime;
 	std::string sCurrentTime;
-	std::string sLatesetTime;
+	std::string sMYSQLQueryTime;   //mysql 查询语句用的相对时间
 
 
 
@@ -78,7 +79,8 @@ public:
 	float todayOpen;
 	float yesterdaySettle;
 
-
+	double dProfitFlyingStartSlope;
+	double dProfitFlyingStartprice;
 
 	bool startLoadData;
 
@@ -105,15 +107,18 @@ public:
 
 	double slope(const std::vector<time_t>& xaxis, const std::vector<double>& yaxis);
 
-	void judgeBuyOrSell();
+	void judgeBuyOrSell();   //追涨杀跌
 
 
 public:
-	void connect();
+	void connectCTP();
 	void release();
 	void login();
 	void settlementinfoConfirm();
 	void orderinsert(const char* HeYunName,const char* BuyOrSell,int iPrice);
+	void MyReqOrderAction();
+
+
 	void qryInstrument();
 	void OnFrontConnected();
 	void OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
@@ -126,18 +131,34 @@ public:
 	void QryAccount();
 	void OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
 
+public: 
+	void onTimerout();
+
 public:
 	int OrderRef;
 	int nRequestID;
 
 	bool BuyingState;
 	bool SellingState;
-	double BuyingPrice;
+	
+	double BuyingPrice;     //下单价
 	double SellingPrice;
+
+
+	double BuyedPrice;     //成交价
+	double SelledPrice;
+
+
 	double StopLoseBuyPrice;
 	double StopLoseSellPrice;
 
 	int dealRefNumber;
+
+	std::string sOrderSysID;   //撤单用
+	bool ifOrdDealed;
+
+
+
 
 public:    //about timer 
 	//PTP_POOL pool;

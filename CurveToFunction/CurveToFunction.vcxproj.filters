@@ -63,6 +63,12 @@
     <ClInclude Include="tbx_std.h">
       <Filter>Header Files\TBCliHeads</Filter>
     </ClInclude>
+    <ClInclude Include="DataStructureAndFunctions.h">
+      <Filter>Header Files\TBCliHeads</Filter>
+    </ClInclude>
+    <ClInclude Include="Timer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -83,5 +89,13 @@
     <ClCompile Include="tbx_cli.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Timer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="TODO.txt">
+      <Filter>Source Files</Filter>
+    </Text>
   </ItemGroup>
 </Project>
