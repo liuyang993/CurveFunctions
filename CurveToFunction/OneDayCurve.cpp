@@ -119,7 +119,7 @@ OneDayCurve::OneDayCurve(int y,int m,int d,std::string sContractName)
 	CliToolsParams.fLowPrioryThread			= TBX_TRUE;
 
 
-
+	
 	CliToolsParams.un32DefaultScreenWidth	= 80;
 	CliToolsParams.un32DefaultScreenHeight	= 24;
 
@@ -136,6 +136,10 @@ OneDayCurve::OneDayCurve(int y,int m,int d,std::string sContractName)
 	CliToolsParams.fDisableTerminalOutput	= TBX_FALSE;
 
 
+	//CliToolsParams.fprint
+	//fPrintAllowed
+
+
 	/* Menu choice handler */
 	//CliToolsParams.pFctHandleMenuChoice	= HandleChoice;
 	//CliToolsParams.pCtxHandleMenuChoice	= NULL;
@@ -148,13 +152,21 @@ OneDayCurve::OneDayCurve(int y,int m,int d,std::string sContractName)
 	/* Launch the command-line thread */
 	Result = TbxCliToolsStart( hTbxCliTools );
 
-	TbxCliToolsLogPrint
-	(
-		hTbxCliTools,
-		TRACE_LEVEL_3, FGREEN,
-		"class member start timer \n"
-	);
+	//TbxCliToolsLogPrint
+	//(
+	//	hTbxCliTools,
+	//	TRACE_LEVEL_3, FGREEN,
+	//	"class member start timer \n"
+	//);
 
+
+	//TbxCliToolsPrint
+	//(
+	//	hTbxCliTools,
+	//	"(%c) Help    (%c) Quit",
+	//	'?',
+	//	'q'
+	//);
 
 	//BOOL bRet = FALSE;
  //   PTP_TIMER timer = NULL;
@@ -365,7 +377,7 @@ void OneDayCurve::loadData()
 	timeinfo1->tm_mon=month-1;
 	timeinfo1->tm_mday =day;
 	timeinfo1->tm_hour = 15;
-	timeinfo1->tm_min = 30;
+	timeinfo1->tm_min = 31;
 	timeinfo1->tm_sec = 0;
 
 	sMYSQLQueryTime = commonFuctions::GetStringFromTM(timeinfo1);
@@ -386,7 +398,7 @@ void OneDayCurve::loadData()
 		SQLCHAR* query = (SQLCHAR*)(sQuery.c_str()) ;
 
 #else
-		std::string sQuery = "select * from rb20181204 where happentime<='" + sMYSQLQueryTime + "' order by happentime desc limit 120";
+		std::string sQuery = "select * from if1903_20190221 where happentime<='" + sMYSQLQueryTime + "' order by happentime desc limit 120";
 		SQLCHAR* query = (SQLCHAR*)(sQuery.c_str()) ;
 
 #endif
@@ -402,7 +414,7 @@ void OneDayCurve::loadData()
 					Sleep(3000);
 					continue;
 			#else
-					commonFuctions::addSecondsToTM(timeinfo1,3);
+					commonFuctions::addSecondsToTM(timeinfo1,1);
 					sMYSQLQueryTime = commonFuctions::GetStringFromTM(timeinfo1);
 					continue;
 
@@ -449,6 +461,7 @@ void OneDayCurve::loadData()
 				  tmdate.tm_hour = atoi(&buf[11]);
 				  tmdate.tm_min = atoi(&buf[14]);
 				  tmdate.tm_sec = atoi(&buf[17]);
+				  
 
 
 				  time_t t = mktime( &tmdate );
@@ -484,7 +497,7 @@ void OneDayCurve::loadData()
 		//update last 3 time slope 
 		Last2TimeSlope=Last1TimeSlope;
 		Last1TimeSlope = currentOneMinuteSlope;
-		currentOneMinuteSlope = slope(x,y);
+		currentOneMinuteSlope = slope(sMYSQLQueryTime,x,y);
 
 
 		//goto judgement logic 
@@ -494,7 +507,7 @@ void OneDayCurve::loadData()
 #ifdef TRADETIME
 		Sleep(3000);
 #else
-		Sleep(1000);
+		Sleep(3000);
 		commonFuctions::addSecondsToTM(timeinfo1,3);
 		sMYSQLQueryTime = commonFuctions::GetStringFromTM(timeinfo1);
 
@@ -570,7 +583,7 @@ void OneDayCurve::onTimerout()
 }
 
 
-double OneDayCurve::slope(const std::vector<time_t>& xaxis, const std::vector<double>& yaxis)
+double OneDayCurve::slope(const std::string sTime, std::vector<time_t>& xaxis, const std::vector<double>& yaxis)
 {
 	//if(x.size() != y.size()){
  //       throw exception("...");
@@ -599,7 +612,7 @@ double OneDayCurve::slope(const std::vector<time_t>& xaxis, const std::vector<do
 	(
 		hTbxCliTools,
 		TRACE_LEVEL_3, FGREEN,
-		"last 1 min slope is %f , and new price is %6.2f \n" , dResult,yaxis[0]
+		"at %s ,last 1 min slope is %f , and new is %6.2f \n" ,sTime.c_str(), dResult,yaxis[0]
 	);
 
     return dResult;

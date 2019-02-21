@@ -51,7 +51,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;TRADETIME;_ONLYTESTAPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_TRADETIME;_ONLYTESTAPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -79,6 +79,8 @@
   <ItemGroup>
     <ClInclude Include="DataStructureAndFunctions.h" />
     <ClInclude Include="OneDayCurve.h" />
+    <ClInclude Include="oneDayDaya.h" />
+    <ClInclude Include="PeriodSummary.h" />
     <ClInclude Include="tbx_cli.h" />
     <ClInclude Include="tbx_cli_tools.h" />
     <ClInclude Include="tbx_cli_tools_private.h" />
@@ -98,6 +100,7 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="OneDayCurve.cpp" />
+    <ClCompile Include="oneDayDaya.cpp" />
     <ClCompile Include="tbx_cli.c" />
     <ClCompile Include="tbx_cli_parse.c" />
     <ClCompile Include="tbx_cli_tools.c" />

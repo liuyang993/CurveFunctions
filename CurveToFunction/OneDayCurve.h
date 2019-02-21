@@ -105,7 +105,7 @@ public:
 
 	void initMySQLConnection();
 
-	double slope(const std::vector<time_t>& xaxis, const std::vector<double>& yaxis);
+	double slope(const std::string sTime, std::vector<time_t>& xaxis, const std::vector<double>& yaxis);
 
 	void judgeBuyOrSell();   //×·ÕÇÉ±µø
 

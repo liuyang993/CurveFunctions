@@ -280,7 +280,7 @@ TBX_RESULT TbxCliToolsInit
 		pCliToolsCtx->un32StartTimestamp	= TBX_GET_TICK_PRECISE();
 		pCliToolsCtx->un32CurrentTimestamp	= TBX_GET_TICK_PRECISE();
 
-		//pCliToolsCtx->fPrintAllowed = TBX_TRUE;
+		pCliToolsCtx->fPrintAllowed = TBX_TRUE;
 
 		/* Check if this application is launched by the watchdog in service mode */
 		//{
@@ -1470,6 +1470,19 @@ TBX_BOOL TbxCliToolsDefaultKeysHandler
 					TBX_TRUE,
 					TBX_CLI_TOOLS_SCROLL_END
 				);
+				fHandled = TBX_TRUE;
+			} break;
+
+			/* Display k line */
+			case 107:    //char  'k'
+			{
+				//pCliToolsCtx->
+
+				pCliToolsCtx->CmdInput.Public.CmdType = 8;
+
+				strcpy( pCliToolsCtx->CmdInput.Public.paszPrompt[0].szLine,		"Reload TBConfig.txt? (Y/N): " );
+				strcpy( pCliToolsCtx->CmdInput.Public.paszUserInput[0].szLine,	"N" );
+
 				fHandled = TBX_TRUE;
 			} break;
 
@@ -3323,9 +3336,16 @@ static TBX_RESULT __stdcall   TbxCliToolsCliThread( PTBX_VOID in_pCliToolsCtx )
 									TbxCliToolsUserInputValidate( in_pCliToolsCtx, '\n', 1, TBX_TRUE );
 								}
 							}
+							else
+							{
+
+								TbxCliToolsDefaultKeysHandler((TBX_CLI_TOOLS_HANDLE)pCliToolsCtx,nOption);
+							}
 						}
 						else
 						{
+						
+
 							/* Gather the user input for current menu choice */
 							TbxCliToolsGatherUserInput( pCliToolsCtx, nOptionNoInfo );
 						}

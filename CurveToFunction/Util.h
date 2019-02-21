@@ -29,7 +29,7 @@ public:
 	{
 		char buffer [80];
 		std::strftime(buffer,80,"%Y-%m-%d %H:%M:%S",t);
-		std::puts(buffer);
+		//std::puts(buffer);
 		std::string sRtn = buffer;
 		return sRtn;
 	

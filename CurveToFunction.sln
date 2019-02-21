@@ -5,6 +5,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CurveToFunction", "CurveToF
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "windowsTimer", "windowsTimer\windowsTimer.vcxproj", "{A761FF84-E022-4965-8BC4-18DC62A5ADA2}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vectorOfMap", "vectorOfMap\vectorOfMap.vcxproj", "{2CA3353F-9CA9-4541-B2E9-08656D17D6CC}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cPluseDatetime", "cPluseDatetime\cPluseDatetime.vcxproj", "{3C3170BB-28C7-4C81-94FD-8581CC602BE1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -19,6 +23,14 @@ Global
 		{A761FF84-E022-4965-8BC4-18DC62A5ADA2}.Debug|Win32.Build.0 = Debug|Win32
 		{A761FF84-E022-4965-8BC4-18DC62A5ADA2}.Release|Win32.ActiveCfg = Release|Win32
 		{A761FF84-E022-4965-8BC4-18DC62A5ADA2}.Release|Win32.Build.0 = Release|Win32
+		{2CA3353F-9CA9-4541-B2E9-08656D17D6CC}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2CA3353F-9CA9-4541-B2E9-08656D17D6CC}.Debug|Win32.Build.0 = Debug|Win32
+		{2CA3353F-9CA9-4541-B2E9-08656D17D6CC}.Release|Win32.ActiveCfg = Release|Win32
+		{2CA3353F-9CA9-4541-B2E9-08656D17D6CC}.Release|Win32.Build.0 = Release|Win32
+		{3C3170BB-28C7-4C81-94FD-8581CC602BE1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3C3170BB-28C7-4C81-94FD-8581CC602BE1}.Debug|Win32.Build.0 = Debug|Win32
+		{3C3170BB-28C7-4C81-94FD-8581CC602BE1}.Release|Win32.ActiveCfg = Release|Win32
+		{3C3170BB-28C7-4C81-94FD-8581CC602BE1}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
