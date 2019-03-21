@@ -378,6 +378,8 @@ void OneDayCurve::loadData()
 	timeinfo1->tm_mday =day;
 	timeinfo1->tm_hour = 15;
 	timeinfo1->tm_min = 31;
+	//timeinfo1->tm_hour = 9;
+	//timeinfo1->tm_min = 30;
 	timeinfo1->tm_sec = 0;
 
 	sMYSQLQueryTime = commonFuctions::GetStringFromTM(timeinfo1);
@@ -398,7 +400,7 @@ void OneDayCurve::loadData()
 		SQLCHAR* query = (SQLCHAR*)(sQuery.c_str()) ;
 
 #else
-		std::string sQuery = "select * from if1903_20190221 where happentime<='" + sMYSQLQueryTime + "' order by happentime desc limit 120";
+		std::string sQuery = "select * from if1904_20190321 where happentime<='" + sMYSQLQueryTime + "' order by happentime desc limit 120";
 		SQLCHAR* query = (SQLCHAR*)(sQuery.c_str()) ;
 
 #endif
@@ -414,7 +416,7 @@ void OneDayCurve::loadData()
 					Sleep(3000);
 					continue;
 			#else
-					commonFuctions::addSecondsToTM(timeinfo1,1);
+					commonFuctions::addSecondsToTM(timeinfo1,3);
 					sMYSQLQueryTime = commonFuctions::GetStringFromTM(timeinfo1);
 					continue;
 
@@ -507,8 +509,8 @@ void OneDayCurve::loadData()
 #ifdef TRADETIME
 		Sleep(3000);
 #else
-		Sleep(3000);
-		commonFuctions::addSecondsToTM(timeinfo1,3);
+		Sleep(1000);
+		commonFuctions::addSecondsToTM(timeinfo1,1);
 		sMYSQLQueryTime = commonFuctions::GetStringFromTM(timeinfo1);
 
 #endif

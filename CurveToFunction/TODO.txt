@@ -1,0 +1,6 @@
+1: keypress
+
+   s:  show current state , deal price , +-profit
+   k:  show k Pic by call python script 
+
+2: use TRADETIME to decide if current is real time trade or FuPan
