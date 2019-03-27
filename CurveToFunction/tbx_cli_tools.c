@@ -1480,8 +1480,18 @@ TBX_BOOL TbxCliToolsDefaultKeysHandler
 
 				pCliToolsCtx->CmdInput.Public.CmdType = 8;
 
-				strcpy( pCliToolsCtx->CmdInput.Public.paszPrompt[0].szLine,		"Reload TBConfig.txt? (Y/N): " );
-				strcpy( pCliToolsCtx->CmdInput.Public.paszUserInput[0].szLine,	"N" );
+				//strcpy( pCliToolsCtx->CmdInput.Public.paszPrompt[0].szLine,		"Reload TBConfig.txt? (Y/N): " );
+				//strcpy( pCliToolsCtx->CmdInput.Public.paszUserInput[0].szLine,	"N" );
+
+				strcpy( pCliToolsCtx->CmdInput.Public.paszPrompt[0].szLine,		"Year: " );
+				strcpy( pCliToolsCtx->CmdInput.Public.paszPrompt[1].szLine,		"Month: " );
+				strcpy( pCliToolsCtx->CmdInput.Public.paszPrompt[2].szLine,		"Day: " );
+				strcpy( pCliToolsCtx->CmdInput.Public.paszPrompt[3].szLine,		"Hour: " );
+				strcpy( pCliToolsCtx->CmdInput.Public.paszPrompt[4].szLine,		"Minute: " );
+
+
+
+				//strcpy( pCliToolsCtx->CmdInput.Public.paszUserInput[0].szLine,	"N" );
 
 				fHandled = TBX_TRUE;
 			} break;

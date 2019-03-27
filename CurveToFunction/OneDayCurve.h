@@ -52,6 +52,9 @@ public:
 	int month;
 	int day;
 
+	int hour;
+	int minute;
+
 	std::string contractName;
 	std::string DBTableName;
 
@@ -95,8 +98,10 @@ public:
 
 
 public:
-	OneDayCurve(int y,int m,int d,std::string sContractName);   //set DBTableName
+	OneDayCurve(int y,int m,int d,int h, int minute ,std::string sContractName);   //set DBTableName
 
+
+	void closeSQLHandle();
 	void loadData();   //query data into vector base on DBTableName
 
 	bool CHECK( SQLRETURN rc, char * msg, bool printSucceededMsg=false, bool quit=true );
@@ -108,6 +113,9 @@ public:
 	double slope(const std::string sTime, std::vector<time_t>& xaxis, const std::vector<double>& yaxis);
 
 	void judgeBuyOrSell();   //×·ÕÇÉ±µø
+
+	void resetVariables();
+
 
 
 public:
@@ -130,6 +138,11 @@ public:
 	void OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
 	void QryAccount();
 	void OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
+
+
+	//function for cli menu 
+	//TBX_VOID  TBCAFCliHandleMenuChoice(TBX_CLI_TOOLS_HANDLE	in_hCliTools,PTBX_VOID	in_pContext, TBX_INT in_KeyPressed, PTBX_CLI_TOOLS_CMD io_pCmdInput);
+
 
 public: 
 	void onTimerout();

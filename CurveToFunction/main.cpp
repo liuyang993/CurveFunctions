@@ -76,7 +76,7 @@ void main(int argc, char* argv[])
  //       std::cout << argv[i] << "\n"; 
 
 
-	OneDayCurve *oc = new OneDayCurve(atoi(argv[1]),atoi(argv[2]),atoi(argv[3]),argv[4]);
+	OneDayCurve *oc = new OneDayCurve(atoi(argv[1]),atoi(argv[2]),atoi(argv[3]),atoi(argv[4]),atoi(argv[5]),argv[6]);
 	oc->initMySQLConnection();
 	oc->loadData();
 	//OneDayCurve *oc = new OneDayCurve(2018,12,7,"rb1905");
@@ -129,7 +129,11 @@ void main(int argc, char* argv[])
 //
 //#endif
 
-	getchar();
+	while (true)
+	{
+
+	}
+	//getchar();
 	return;	
 
 }

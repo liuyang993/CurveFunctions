@@ -2,6 +2,7 @@
 #include <string>
 #include <stdio.h>
 #include <time.h>
+#include <sstream>
 
 // Get current date/time, format is YYYY-MM-DD.HH:mm:ss
 const std::string currentDateTime() {
@@ -28,11 +29,48 @@ const std::string currentDateTime() {
     return buf;
 }
 
+
+
+const std::string getStringFromYMD() {
+	int year = 2019;
+	int month =  3;
+	int day = 26; 
+
+	std::stringstream s;
+	s<<year;
+	if(month<10)
+	{
+		s<<"0";
+		s<<month;
+	}
+	else
+	{
+		s<<month;
+	}
+	if(day<10)
+	{
+		s<<"0";
+		s<<day;
+	}
+	else
+	{
+		s<<day;
+	}
+
+	
+
+	std::string s1 = s.str();
+
+
+
+	return s1;
+}
+
 int main() {
     std::cout << "currentDateTime()=" << currentDateTime() << std::endl;
     
 	
-
+	std::string s1= getStringFromYMD();
 
 	
 	

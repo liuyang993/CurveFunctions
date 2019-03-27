@@ -700,7 +700,7 @@ TBX_VOID TbxCliToolsUserInputValidate
 		in_pCliToolsCtx->CmdInput.fEnteredValueValid			= TBX_TRUE;
 
 		/* Validate the user input */
-		if( in_pCliToolsCtx->Params.pFctValidateUserInput )
+		if( in_pCliToolsCtx->Params.pFctValidateUserInput )           // if custome has own validate function ?  if have , use his own 
 		{
 			PFCT_TBX_CLI_TOOLS_VALIDATE_INPUT_CALLBACK	pFctValidateUserInput = in_pCliToolsCtx->Params.pFctValidateUserInput;
 			PTBX_VOID									pCtxValidateUserInput = in_pCliToolsCtx->Params.pCtxValidateUserInput;

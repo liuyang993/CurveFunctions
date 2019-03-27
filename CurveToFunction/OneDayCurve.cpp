@@ -3,7 +3,93 @@
 #include "Timer.h"
 
 
-OneDayCurve::OneDayCurve(int y,int m,int d,std::string sContractName)
+TBX_VOID
+TBCAFCliHandleMenuChoice(
+  IN		TBX_CLI_TOOLS_HANDLE		in_hCliTools,
+  IN		PTBX_VOID					in_pContext,
+  IN		TBX_INT						in_KeyPressed,
+  IN_OUT	PTBX_CLI_TOOLS_CMD			io_pCmdInput)
+{
+
+
+	/* Remove the remote controlled key modifier bit (not used in CAF) */
+	in_KeyPressed &= ~TBX_CLI_TOOLS_KEY_REMOTE_CONTROL_MODIFIER_MASK;
+	TbxCliToolsDefaultKeysHandler(in_hCliTools,in_KeyPressed);
+
+	//TbxCliToolsPrintPrivate( in_pCliToolsCtx, "Enter your command>_\n" );
+
+}
+
+
+TBX_VOID
+TBCAFCliApplyUserInput(
+  IN		TBX_CLI_TOOLS_HANDLE		in_hCliTools,
+  IN		PTBX_VOID					in_pContext,
+  IN_OUT	PTBX_CLI_TOOLS_CMD			io_pCmdInput)
+{
+	PTBX_CHAR	pszUserInput;
+	int iYear;
+	int iMonth;
+	int iDay;
+	int iHour;
+	int iMinute;
+
+	OneDayCurve* oc;
+	switch (io_pCmdInput->CmdType)
+	{
+	case 8:  // goto special date and time  
+		pszUserInput = io_pCmdInput->paszUserInput[0].szLine;
+		sscanf(pszUserInput, "%d",&iYear);
+
+		pszUserInput = io_pCmdInput->paszUserInput[1].szLine;
+		sscanf(pszUserInput, "%d",&iMonth);
+
+		pszUserInput = io_pCmdInput->paszUserInput[2].szLine;
+		sscanf(pszUserInput, "%d",&iDay);
+
+		pszUserInput = io_pCmdInput->paszUserInput[3].szLine;
+		sscanf(pszUserInput, "%d",&iHour);
+
+		pszUserInput = io_pCmdInput->paszUserInput[4].szLine;
+		sscanf(pszUserInput, "%d",&iMinute);
+
+	
+		oc = (OneDayCurve*)in_pContext;
+		oc->year = iYear;
+		oc->month=iMonth;
+		oc->day=iDay;
+		oc->hour=iHour;
+		oc->minute=iMinute;
+
+		oc->startLoadData=false;
+
+
+
+		
+		Sleep(3000);
+
+		oc->resetVariables();
+		oc->startLoadData=true;
+		oc->initMySQLConnection();
+
+
+
+		oc->loadData();
+		
+		io_pCmdInput->CmdType=0;
+
+		break;
+	default:
+		break;
+	}
+
+
+
+}
+
+
+
+OneDayCurve::OneDayCurve(int y,int m,int d,int h , int min , std::string sContractName)
 {
 	currentOneMinuteSlope=0;
 	Last1TimeSlope=0;
@@ -32,6 +118,8 @@ OneDayCurve::OneDayCurve(int y,int m,int d,std::string sContractName)
 	year=y;
 	month=m;
 	day=d;
+	hour = h;
+	minute = min; 
 	contractName = sContractName;
 
 	startLoadData = true;
@@ -114,7 +202,7 @@ OneDayCurve::OneDayCurve(int y,int m,int d,std::string sContractName)
 	CliToolsParams.un32MinScreenWidth		= 80;
 	CliToolsParams.un32MinScreenHeight		= 24;
 
-	CliToolsParams.un32MaxPromptLines		= 1;
+	CliToolsParams.un32MaxPromptLines		= 5;
 	CliToolsParams.un32LogBufferMaxLines    = 10000;
 	CliToolsParams.fLowPrioryThread			= TBX_TRUE;
 
@@ -135,14 +223,20 @@ OneDayCurve::OneDayCurve(int y,int m,int d,std::string sContractName)
 	CliToolsParams.fDisableTerminalInput	= TBX_FALSE;
 	CliToolsParams.fDisableTerminalOutput	= TBX_FALSE;
 
+	
+
 
 	//CliToolsParams.fprint
 	//fPrintAllowed
 
 
 	/* Menu choice handler */
-	//CliToolsParams.pFctHandleMenuChoice	= HandleChoice;
-	//CliToolsParams.pCtxHandleMenuChoice	= NULL;
+	CliToolsParams.pFctHandleMenuChoice	= TBCAFCliHandleMenuChoice;
+	CliToolsParams.pCtxHandleMenuChoice	= (PTBX_VOID)this;
+
+	/* User Input apply handler */
+	CliToolsParams.pFctApplyUserInput		= TBCAFCliApplyUserInput;
+	CliToolsParams.pCtxApplyUserInput		= (PTBX_VOID)this;
 
 
 	
@@ -160,13 +254,13 @@ OneDayCurve::OneDayCurve(int y,int m,int d,std::string sContractName)
 	//);
 
 
-	//TbxCliToolsPrint
-	//(
-	//	hTbxCliTools,
-	//	"(%c) Help    (%c) Quit",
-	//	'?',
-	//	'q'
-	//);
+	TbxCliToolsPrint
+	(
+		hTbxCliTools,
+		"(%c) Help    (%c) Quit",
+		'?',
+		'q'
+	);
 
 	//BOOL bRet = FALSE;
  //   PTP_TIMER timer = NULL;
@@ -178,6 +272,8 @@ OneDayCurve::OneDayCurve(int y,int m,int d,std::string sContractName)
  //   ULARGE_INTEGER ulDueTime;
  //   UINT rollback = 0;
 }
+
+
 
 
 bool OneDayCurve::CHECK( SQLRETURN rc, char * msg, bool printSucceededMsg, bool quit)
@@ -291,7 +387,6 @@ void OneDayCurve::initMySQLConnection()
 	CHECK( SQLAllocHandle( SQL_HANDLE_DBC, hEnv, &hConn ), "allocate handle" ) ;
 
   
-  
 
 	// HOOK IT UP!!  Actually connect to the database.
 	SQLCHAR* dsnName = (SQLCHAR*)"SHFuture" ;  // MUST BE THE SAME
@@ -367,31 +462,203 @@ void OneDayCurve::initMySQLConnection()
 }
 
 
-void OneDayCurve::loadData()
-{
 
-	//special use for FuPan
+void OneDayCurve::closeSQLHandle()
+{
+	SQLFreeHandle( SQL_HANDLE_STMT, hStmt ) ;
+	SQLFreeHandle( SQL_HANDLE_DBC, hConn ) ;
+	SQLFreeHandle( SQL_HANDLE_ENV, hEnv ) ;
+	initMySQLConnection();
+
+}
+
+void OneDayCurve::resetVariables()
+{
+	 currentOneMinuteSlope = 0.0;
+	 Last1TimeSlope = 0.0 ;
+	 Last2TimeSlope = 0.0 ;
+
+	 todayHighPoint= 0.0;
+	 todayLowPoint= 0.0;
+	 currentPoint= 0.0;
+	 todayOpen= 0.0;
+	 yesterdaySettle= 0.0;
+
+	 dProfitFlyingStartSlope = 0.0;
+	 dProfitFlyingStartprice = 0.0;
+
+	OrderRef= 0;
+	 nRequestID = 0;
+
+	 BuyingState = false;
+
+	 SellingState = false;
+	
+	 BuyingPrice= 0.0;
+	 SellingPrice= 0.0;
+
+
+	 BuyedPrice= 0.0;
+	 SelledPrice= 0.0;
+
+
+	 StopLoseBuyPrice= 0.0;
+	 StopLoseSellPrice= 0.0;
+
+	 dealRefNumber= 0;
+
+	 sOrderSysID = "";  //
+	 ifOrdDealed = false;
+
+
+
+
+}
+
+
+void OneDayCurve::loadData()    //int year, int month , int day , int hour , int minute
+{
+	TBX_RESULT Result;
+
+
+	//	TBX_CLI_TOOLS_INIT_PARAMS	CliToolsParams;
+
+	///* Prepare the CLI Tools parameters */
+	//memset( &CliToolsParams, 0, sizeof(CliToolsParams) );
+	//CliToolsParams.un32MaxScreenWidth		= 256;
+	//CliToolsParams.un32MaxScreenHeight		= 150;
+	//CliToolsParams.un32MinScreenWidth		= 80;
+	//CliToolsParams.un32MinScreenHeight		= 24;
+
+	//CliToolsParams.un32MaxPromptLines		= 5;
+	//CliToolsParams.un32LogBufferMaxLines    = 10000;
+	//CliToolsParams.fLowPrioryThread			= TBX_TRUE;
+
+
+	//
+	//CliToolsParams.un32DefaultScreenWidth	= 80;
+	//CliToolsParams.un32DefaultScreenHeight	= 24;
+
+	//CliToolsParams.fDisplayLog				= TBX_TRUE;
+	//CliToolsParams.un32MaxRefreshDelay		= 250;
+	//CliToolsParams.un32MinClsDelay			= 10;
+	//CliToolsParams.fFlushLogOnlyOnError	= TBX_FALSE;
+
+	//strcpy( CliToolsParams.szLogFileName, "tbtoolpack_service" );
+	//CliToolsParams.un32LogBufferMaxLines	= 1000;
+	//CliToolsParams.un32MaxLogFileSize		= 1024*1024;
+	//CliToolsParams.un32MinRefreshDelay		= 50;
+	//CliToolsParams.fDisableTerminalInput	= TBX_FALSE;
+	//CliToolsParams.fDisableTerminalOutput	= TBX_FALSE;
+
+
+
+
+ //   Result = TbxCliToolsInit( &CliToolsParams, &hTbxCliTools );
+
+	Result = TbxCliToolsStart( hTbxCliTools );
+
+
+
 	std::tm* timeinfo1;
 	timeinfo1 = std::localtime(&currentTime);
 	timeinfo1->tm_year=year-1900; 
 	timeinfo1->tm_mon=month-1;
 	timeinfo1->tm_mday =day;
-	timeinfo1->tm_hour = 15;
-	timeinfo1->tm_min = 31;
-	//timeinfo1->tm_hour = 9;
-	//timeinfo1->tm_min = 30;
+	timeinfo1->tm_hour = hour;
+	timeinfo1->tm_min = minute;
 	timeinfo1->tm_sec = 0;
 
 	sMYSQLQueryTime = commonFuctions::GetStringFromTM(timeinfo1);
 
 
+	// first confirm if table exist  
+	std::stringstream s;
+	s<<year;
+	if(month<10)
+	{
+		s<<"0";
+		s<<month;
+	}
+	else
+	{
+		s<<month;
+	}
+	if(day<10)
+	{
+		s<<"0";
+		s<<day;
+	}
+	else
+	{
+		s<<day;
+	}
+
+	
+
+	std::string sTablename = s.str();
+
+
+
+	//if do not add 'if' , maybe find rb or  ic  
+	std::string sQuery = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'shfuture' AND table_name like 'if%" + sTablename + "'  order by create_time desc LIMIT 1;";
+	SQLCHAR* query = (SQLCHAR*)(sQuery.c_str()) ;
+
+	CHECK( SQLExecDirectA( hStmt, query, SQL_NTS ), "execute query" ) ;
+
+	retCode = SQLFetch( hStmt ) ;
+
+	if(retCode!=0)    // do not have this table 
+	{
+		TbxCliToolsLogPrint
+		(
+			hTbxCliTools,
+			TRACE_LEVEL_3, FGREEN,
+			"can not find table %s \n" , sTablename.c_str()
+		);
+
+
+		return;
+	}
+
+
+
+	//get table name from query
+	char buf[256];
+	SQLINTEGER numBytes ;
+
+	retCode = SQLGetData(
+      
+	hStmt,
+	1,           // COLUMN NUMBER of the data to get
+	SQL_C_CHAR,  // the data type that you expect to receive
+	buf,         // the place to put the data that you expect to receive
+	255,         // the size in bytes of buf (-1 for null terminator)
+	&numBytes    // size in bytes of data returned
+	) ;
+
+	std::string stablename(buf);
+
+
+
+
+	SQLFreeHandle( SQL_HANDLE_STMT, hStmt ) ;
+	SQLFreeHandle( SQL_HANDLE_DBC, hConn ) ;
+	SQLFreeHandle( SQL_HANDLE_ENV, hEnv ) ;
+	initMySQLConnection();
+
+
+	//int iTimes = 1 ;
+
 	while(startLoadData)
 	{
+
+		//iTimes++; 
+
 		x.clear();
 		y.clear();
 
 		//SQLCHAR* query = (SQLCHAR*)"select happentime,lastprice from rb20181201 where happentime<='2018-12-1 23:30:30' and hour(happentime)>=21  order by happentime desc limit 120" ;
-
 
 #ifdef TRADETIME
 		//std::string sQuery = "select * from rb20181204 where happentime<='" + sMYSQLQueryTime + "' order by happentime desc limit 120";
@@ -400,7 +667,10 @@ void OneDayCurve::loadData()
 		SQLCHAR* query = (SQLCHAR*)(sQuery.c_str()) ;
 
 #else
-		std::string sQuery = "select * from if1904_20190321 where happentime<='" + sMYSQLQueryTime + "' order by happentime desc limit 120";
+		//std::string sQuery = "select * from if1904_20190326 where happentime<='" + sMYSQLQueryTime + "' order by happentime desc limit 120";
+		
+		std::string sQuery = "select * from " + stablename + " where happentime<='" + sMYSQLQueryTime + "' order by happentime desc limit 120";		
+		
 		SQLCHAR* query = (SQLCHAR*)(sQuery.c_str()) ;
 
 #endif
@@ -516,7 +786,9 @@ void OneDayCurve::loadData()
 #endif
 
 	}
+	TBXCliCls();
 
+    Result = TbxCliToolsStop( hTbxCliTools );
 
 	SQLFreeHandle( SQL_HANDLE_STMT, hStmt ) ;
 	SQLFreeHandle( SQL_HANDLE_DBC, hConn ) ;
