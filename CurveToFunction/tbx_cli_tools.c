@@ -2690,7 +2690,7 @@ static TBX_RESULT __stdcall   TbxCliToolsCliThread( PTBX_VOID in_pCliToolsCtx )
 				pDisplayBuffer = pCliToolsCtx->pDisplayBuf;
 
 				/* Return to start of display buffer */
-				pDisplayBuffer->un32NbLines			= 0;
+				pDisplayBuffer->un32NbLines			= 5;       // 2019-3-26  LY   change it from 0 to 10
 
 				/* Clear refresh flag */
 				pCliToolsCtx->fRefreshRequired					= TBX_FALSE;
@@ -2965,7 +2965,7 @@ static TBX_RESULT __stdcall   TbxCliToolsCliThread( PTBX_VOID in_pCliToolsCtx )
 
 						if( !pCliToolsCtx->Params.fDisableTerminalOutput || pCliToolsCtx->fGenerateRemoteScreen )
 						{
-							/* Complete the display buffer with logs */
+							/* Complete the display buffer with logs */    // pDisplayBuffer->aLines  get value from here  --- LY  
 							TbxCliToolsGetLogDisplay
 							(
 								pCliToolsCtx,
@@ -3522,7 +3522,7 @@ void TbxCliToolsvPrintPrivate
 		TbxCliTools_vsnprintf( szTmpBuffer, sizeof(szTmpBuffer)-1, in_pszString, in_Marker );
 	}
 
-	if( pDisplayBuffer->un32NbLines < pDisplayBuffer->un32CurrentHeight )
+	if( pDisplayBuffer->un32NbLines < pDisplayBuffer->un32CurrentHeight )  // LY :  comment this line  temp
 	{
 		PTBX_CHAR			pszEndString;
 

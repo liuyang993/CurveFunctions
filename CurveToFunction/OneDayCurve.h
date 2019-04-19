@@ -9,6 +9,8 @@
 #include <time.h>
 #include <ctime>
 
+#include <algorithm>
+
 #include <Windows.h>
 #include <sql.h>
 #include <sqltypes.h>
@@ -97,6 +99,9 @@ public:
 	std::vector<double> y;
 
 
+	std::vector<double> WholeDayData;
+
+
 public:
 	OneDayCurve(int y,int m,int d,int h, int minute ,std::string sContractName);   //set DBTableName
 
@@ -113,6 +118,10 @@ public:
 	double slope(const std::string sTime, std::vector<time_t>& xaxis, const std::vector<double>& yaxis);
 
 	void judgeBuyOrSell();   //×·ÕÇÉ±µø
+
+
+	void TryToFindDoubleTop(); 
+
 
 	void resetVariables();
 

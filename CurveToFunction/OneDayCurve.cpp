@@ -197,33 +197,59 @@ OneDayCurve::OneDayCurve(int y,int m,int d,int h , int min , std::string sContra
 
 	/* Prepare the CLI Tools parameters */
 	memset( &CliToolsParams, 0, sizeof(CliToolsParams) );
-	CliToolsParams.un32MaxScreenWidth		= 256;
-	CliToolsParams.un32MaxScreenHeight		= 150;
-	CliToolsParams.un32MinScreenWidth		= 80;
-	CliToolsParams.un32MinScreenHeight		= 24;
+	//CliToolsParams.un32MaxScreenWidth		= 256;
+	//CliToolsParams.un32MaxScreenHeight		= 150;
+	//CliToolsParams.un32MinScreenWidth		= 80;
+	//CliToolsParams.un32MinScreenHeight		= 24;
 
-	CliToolsParams.un32MaxPromptLines		= 5;
-	CliToolsParams.un32LogBufferMaxLines    = 10000;
-	CliToolsParams.fLowPrioryThread			= TBX_TRUE;
+	//CliToolsParams.un32MaxPromptLines		= 5;
+	//CliToolsParams.un32LogBufferMaxLines    = 10000;
+	//CliToolsParams.fLowPrioryThread			= TBX_TRUE;
 
+
+	//
+	//CliToolsParams.un32DefaultScreenWidth	= 80;
+	//CliToolsParams.un32DefaultScreenHeight	= 24;
+
+	//CliToolsParams.fDisplayLog				= TBX_TRUE;
+	//CliToolsParams.un32MaxRefreshDelay		= 250;
+	//CliToolsParams.un32MinClsDelay			= 10;
+	//CliToolsParams.fFlushLogOnlyOnError	= TBX_FALSE;
+
+	//strcpy( CliToolsParams.szLogFileName, "tbtoolpack_service" );
+	//CliToolsParams.un32LogBufferMaxLines	= 1000;
+	//CliToolsParams.un32MaxLogFileSize		= 1024*1024;
+	//CliToolsParams.un32MinRefreshDelay		= 50;
+	//CliToolsParams.fDisableTerminalInput	= TBX_FALSE;
+	//CliToolsParams.fDisableTerminalOutput	= TBX_FALSE;
 
 	
-	CliToolsParams.un32DefaultScreenWidth	= 80;
-	CliToolsParams.un32DefaultScreenHeight	= 24;
+		CliToolsParams.un32MinScreenWidth				= 80;
+	CliToolsParams.un32MinScreenHeight			= 24;
+	CliToolsParams.un32MaxScreenWidth				= 200;
+	CliToolsParams.un32MaxScreenHeight			= 150;
+	CliToolsParams.un32DefaultScreenWidth			= 80;
+	CliToolsParams.un32DefaultScreenWidth			= 24;
+	CliToolsParams.un32MaxPromptLines				= 5;
+	CliToolsParams.fDisplayLog					= TBX_TRUE;
+	CliToolsParams.un32MinRefreshDelay			= 50;
+	CliToolsParams.un32MaxRefreshDelay			= 250;
+	CliToolsParams.un32MinClsDelay				= 10;
+	CliToolsParams.fLowPrioryThread				= TBX_TRUE;
+	CliToolsParams.fDisableTerminalInput			= TBX_FALSE;
+	CliToolsParams.fDisableTerminalOutput			= TBX_FALSE;
+	CliToolsParams.TraceLevelStdout				= TRACE_LEVEL_0;	/* Should not be used, as in CAF upper layer has already filtered by trace level */
+	CliToolsParams.TraceLevelLogFile				= TRACE_LEVEL_0;	/* Should not be used, as in CAF upper layer has already filtered by trace level */
+	CliToolsParams.szLogFileName[0]				= '\0';		/* CLI Tool logging to file not used with CAF */
+	CliToolsParams.fDontRotateLogFile				= TBX_TRUE;	/* CLI Tool logging to file not used with CAF */
+	CliToolsParams.fFlushLogOnlyOnError			= TBX_TRUE;	/* CLI Tool logging to file not used with CAF */
+	CliToolsParams.fLogKeepColorCodes				= TBX_FALSE;/* CLI Tool logging to file not used with CAF */
+	CliToolsParams.un32LogBufferMaxLines			= 10000;
+	CliToolsParams.un32MaxLogFileSize				= 100000;	/* CLI Tool logging to file not used with CAF */
+	CliToolsParams.un32MaxLogFilesPerDay			= 100;		/* CLI Tool logging to file not used with CAF */
+	CliToolsParams.fReceiveRemoteScreen			= TBX_FALSE;
 
-	CliToolsParams.fDisplayLog				= TBX_TRUE;
-	CliToolsParams.un32MaxRefreshDelay		= 250;
-	CliToolsParams.un32MinClsDelay			= 10;
-	CliToolsParams.fFlushLogOnlyOnError	= TBX_FALSE;
 
-	strcpy( CliToolsParams.szLogFileName, "tbtoolpack_service" );
-	CliToolsParams.un32LogBufferMaxLines	= 1000;
-	CliToolsParams.un32MaxLogFileSize		= 1024*1024;
-	CliToolsParams.un32MinRefreshDelay		= 50;
-	CliToolsParams.fDisableTerminalInput	= TBX_FALSE;
-	CliToolsParams.fDisableTerminalOutput	= TBX_FALSE;
-
-	
 
 
 	//CliToolsParams.fprint
@@ -254,13 +280,16 @@ OneDayCurve::OneDayCurve(int y,int m,int d,int h , int min , std::string sContra
 	//);
 
 
-	TbxCliToolsPrint
-	(
-		hTbxCliTools,
-		"(%c) Help    (%c) Quit",
-		'?',
-		'q'
-	);
+	//TbxCliToolsPrint
+	//(
+	//	hTbxCliTools,
+	//	"(%c) Help    (%c) Quit",
+	//	'?',
+	//	'q'
+	//);
+
+
+
 
 	//BOOL bRet = FALSE;
  //   PTP_TIMER timer = NULL;
@@ -520,9 +549,7 @@ void OneDayCurve::loadData()    //int year, int month , int day , int hour , int
 {
 	TBX_RESULT Result;
 
-
 	//	TBX_CLI_TOOLS_INIT_PARAMS	CliToolsParams;
-
 	///* Prepare the CLI Tools parameters */
 	//memset( &CliToolsParams, 0, sizeof(CliToolsParams) );
 	//CliToolsParams.un32MaxScreenWidth		= 256;
@@ -534,8 +561,6 @@ void OneDayCurve::loadData()    //int year, int month , int day , int hour , int
 	//CliToolsParams.un32LogBufferMaxLines    = 10000;
 	//CliToolsParams.fLowPrioryThread			= TBX_TRUE;
 
-
-	//
 	//CliToolsParams.un32DefaultScreenWidth	= 80;
 	//CliToolsParams.un32DefaultScreenHeight	= 24;
 
@@ -551,10 +576,7 @@ void OneDayCurve::loadData()    //int year, int month , int day , int hour , int
 	//CliToolsParams.fDisableTerminalInput	= TBX_FALSE;
 	//CliToolsParams.fDisableTerminalOutput	= TBX_FALSE;
 
-
-
-
- //   Result = TbxCliToolsInit( &CliToolsParams, &hTbxCliTools );
+   //   Result = TbxCliToolsInit( &CliToolsParams, &hTbxCliTools );
 
 	Result = TbxCliToolsStart( hTbxCliTools );
 
@@ -594,10 +616,8 @@ void OneDayCurve::loadData()    //int year, int month , int day , int hour , int
 		s<<day;
 	}
 
-	
 
 	std::string sTablename = s.str();
-
 
 
 	//if do not add 'if' , maybe find rb or  ic  
@@ -622,7 +642,6 @@ void OneDayCurve::loadData()    //int year, int month , int day , int hour , int
 	}
 
 
-
 	//get table name from query
 	char buf[256];
 	SQLINTEGER numBytes ;
@@ -641,7 +660,7 @@ void OneDayCurve::loadData()    //int year, int month , int day , int hour , int
 
 
 
-
+	// after query out tablename  remember re- connect mysql 
 	SQLFreeHandle( SQL_HANDLE_STMT, hStmt ) ;
 	SQLFreeHandle( SQL_HANDLE_DBC, hConn ) ;
 	SQLFreeHandle( SQL_HANDLE_ENV, hEnv ) ;
@@ -650,8 +669,26 @@ void OneDayCurve::loadData()    //int year, int month , int day , int hour , int
 
 	//int iTimes = 1 ;
 
+
+	//	TbxCliToolsPrint
+	//(
+	//	hTbxCliTools,
+	//	"(%c) Help    (%c) Quit",
+	//	'?',
+	//	'q'
+	//);
+	
+
 	while(startLoadData)
 	{
+
+			TbxCliToolsPrint
+	(
+		hTbxCliTools,
+		"(%c) Help    (%c) Quit",
+		'?',
+		'q'
+	);
 
 		//iTimes++; 
 
@@ -660,20 +697,10 @@ void OneDayCurve::loadData()    //int year, int month , int day , int hour , int
 
 		//SQLCHAR* query = (SQLCHAR*)"select happentime,lastprice from rb20181201 where happentime<='2018-12-1 23:30:30' and hour(happentime)>=21  order by happentime desc limit 120" ;
 
-#ifdef TRADETIME
-		//std::string sQuery = "select * from rb20181204 where happentime<='" + sMYSQLQueryTime + "' order by happentime desc limit 120";
-
-		std::string sQuery = "select * from " + DBTableName +  " where happentime<='" + sMYSQLQueryTime + "' order by happentime desc limit 120";
-		SQLCHAR* query = (SQLCHAR*)(sQuery.c_str()) ;
-
-#else
-		//std::string sQuery = "select * from if1904_20190326 where happentime<='" + sMYSQLQueryTime + "' order by happentime desc limit 120";
-		
 		std::string sQuery = "select * from " + stablename + " where happentime<='" + sMYSQLQueryTime + "' order by happentime desc limit 120";		
-		
+		//std::string sQuery = "select * from " + stablename + " where happentime<='" + sMYSQLQueryTime + "' order by id desc limit 500";			
 		SQLCHAR* query = (SQLCHAR*)(sQuery.c_str()) ;
 
-#endif
 		//SQLCHAR* query = (SQLCHAR*)"select * from rb20181207 where happentime<='2018-12-7 15:33:00' order by happentime desc limit 120" ;
 	
 		CHECK( SQLExecDirectA( hStmt, query, SQL_NTS ), "execute query" ) ;
@@ -766,6 +793,20 @@ void OneDayCurve::loadData()    //int year, int month , int day , int hour , int
 		} // end for.
 
 
+		if(WholeDayData.empty())
+		{
+			for (int i=0; i<y.size(); i++) 
+				WholeDayData.push_back(y[y.size()-i-1]); 
+		}
+		else
+		{
+			WholeDayData.push_back(y[1]);     // because 1 second have 2 records 
+			WholeDayData.push_back(y[0]); 
+
+		}
+
+
+
 		//update last 3 time slope 
 		Last2TimeSlope=Last1TimeSlope;
 		Last1TimeSlope = currentOneMinuteSlope;
@@ -773,14 +814,16 @@ void OneDayCurve::loadData()    //int year, int month , int day , int hour , int
 
 
 		//goto judgement logic 
-		judgeBuyOrSell();
-
+		
+		//judgeBuyOrSell();
+		TryToFindDoubleTop();
 
 #ifdef TRADETIME
 		Sleep(3000);
 #else
 		Sleep(1000);
 		commonFuctions::addSecondsToTM(timeinfo1,1);
+		//commonFuctions::addSecondsToTM(timeinfo1,300);
 		sMYSQLQueryTime = commonFuctions::GetStringFromTM(timeinfo1);
 
 #endif
@@ -893,6 +936,17 @@ double OneDayCurve::slope(const std::string sTime, std::vector<time_t>& xaxis, c
 
 }
 
+
+void OneDayCurve::TryToFindDoubleTop()
+{
+	// try to find pivot value 
+	//i1 = std::max_element(v, v + 4); 
+	auto it = std::max_element(std::begin(WholeDayData), std::end(WholeDayData)); // c++11
+
+	return;
+
+
+}
 
 void OneDayCurve::judgeBuyOrSell()
 {
