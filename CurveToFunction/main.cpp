@@ -77,8 +77,12 @@ void main(int argc, char* argv[])
 
 
 	OneDayCurve *oc = new OneDayCurve(atoi(argv[1]),atoi(argv[2]),atoi(argv[3]),atoi(argv[4]),atoi(argv[5]),argv[6]);
-	oc->initMySQLConnection();
-	oc->loadData();
+	
+	
+	//oc->initMySQLConnection();
+	//oc->loadData();
+
+
 	//OneDayCurve *oc = new OneDayCurve(2018,12,7,"rb1905");
 
 	//OneDayData *od = new OneDayData(atoi(argv[1]),atoi(argv[2]),atoi(argv[3]),argv[4],hTbxCliTools);
@@ -87,25 +91,38 @@ void main(int argc, char* argv[])
 
 
 
-//#ifdef TRADETIME
-//
-//	oc->connectCTP();
-//
-//	Sleep(2000);
-//
-//	oc->login();
-//
-//	Sleep(2000);
-//
-//	oc->settlementinfoConfirm();
-//
-//	Sleep(2000);
-//
-//	oc->QryAccount();
-//
-//	oc->initMySQLConnection();
-//	
-//	oc->loadData();
+#ifdef TRADETIME
+
+	oc->connectCTP();
+
+	Sleep(2000);
+
+	oc->login();
+
+	Sleep(2000);
+
+	oc->settlementinfoConfirm();
+
+	Sleep(2000);
+
+	oc->QryAccount();
+
+
+	//for test
+	Sleep(2000);
+	//oc->orderinsert("ni1909","buy",111400);
+
+
+	oc->initMySQLConnection();
+	
+	oc->loadData();
+
+#else 
+	oc->initMySQLConnection();
+	oc->loadData();
+#endif 
+
+
 //
 //
 //

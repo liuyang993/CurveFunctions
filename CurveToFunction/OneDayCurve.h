@@ -119,6 +119,7 @@ public:
 
 	void judgeBuyOrSell();   //×·ÕÇÉ±µø
 
+	void judgeBuyOrSellForNickel(); 
 
 	void TryToFindDoubleTop(); 
 
