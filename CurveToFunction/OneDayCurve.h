@@ -38,10 +38,21 @@ enum DealState
 	none=1,
 	buying,
 	profitFlying,
+	profitCrazy,
 	buyed,
 	selling,
 	selled,
+	findJiDie,
 };
+
+
+enum BuyReason
+{
+	TwotimesJiDie=1,
+	NearTwotimesJiDieAgain,
+};
+
+
 
 class OneDayCurve:public CThostFtdcTraderSpi
 {
@@ -63,16 +74,19 @@ public:
 
 	std::vector<std::map<time_t,float>> wholedayXY;
 
-	OpenWay todayOpenWay;
-	DealState currentState;
 
 	time_t currentTime;
 	std::string sCurrentTime;
 	std::string sMYSQLQueryTime;   //mysql 查询语句用的相对时间
 
-
+	/* parameter about trade info                                 */
 
 	std::list<std::string> noticableThings; 
+
+	OpenWay todayOpenWay;
+	DealState currentState;   //当前trade状态
+
+	BuyReason breason;
 
 	double currentOneMinuteSlope;
 	double Last1TimeSlope;
@@ -88,6 +102,7 @@ public:
 	double dProfitFlyingStartprice;
 
 	bool startLoadData;
+	float JiDiePoint;    //第一次急跌低点
 
 
 	SQLHANDLE hEnv ;
@@ -171,6 +186,8 @@ public:
 	double BuyedPrice;     //成交价
 	double SelledPrice;
 
+	double LastBuyedPrice;     //上次成交价
+	double LastSelledPrice;
 
 	double StopLoseBuyPrice;
 	double StopLoseSellPrice;

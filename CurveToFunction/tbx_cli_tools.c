@@ -4280,7 +4280,7 @@ static __inline void TbxCliToolsLogPrintPrivate
 				/* Split the log file now */
 				TbxCliToolsLogFileSplitPrivate( pCliToolsCtx, TBX_TRUE );
 			}
-		}
+		}	
 		#endif
 
 		if( !pCliToolsCtx->CliThreadContext.fRunning && !pCliToolsCtx->Params.fDisableTerminalOutput )

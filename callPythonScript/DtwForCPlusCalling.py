@@ -11,7 +11,6 @@ def divide_chunks(l, n):
     for i in range(0, len(l), n):  
         yield l[i:i + n] 
 
-
 def SplitArrayAndCalAver(arraySrc,arrayDst,n):
     x = list(divide_chunks(arraySrc, n)) 
     for j in range(len(x)):
@@ -49,6 +48,9 @@ def path_cost(x, y, accumulated_cost, distances):
 
 
 def callDTWBtwTwoArray(pa,pb):
+    print('pa is ' , pa)
+    print('pb is ' , pb)
+
     x=[]
     x.append(1)
     x.append(2)
@@ -69,13 +71,10 @@ def callDTWBtwTwoArray(pa,pb):
 
 
     y=[]
-
     y.append(1)
     y.append(5)
     y.append(6)
     y.append(7)
-
-
 
     #yOneMinAver = []
     #SplitArrayAndCalAver(y,yOneMinAver,60)

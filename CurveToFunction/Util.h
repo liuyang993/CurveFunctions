@@ -53,6 +53,14 @@ public:
 			{
 				t->tm_min=t->tm_min+1-60;
 				t->tm_hour=t->tm_hour+1;
+
+				if(t->tm_hour==24)
+				{  
+					t->tm_yday = t->tm_yday  +1 ;
+					t->tm_mday = t->tm_mday  +1 ;
+					t->tm_wday = t->tm_wday  +1 ;
+					t->tm_hour=0;
+				}
 			}
 
 			while (t->tm_sec>=60)
@@ -64,6 +72,13 @@ public:
 				{
 					t->tm_min=t->tm_min+1-60;
 					t->tm_hour=t->tm_hour+1;
+					if(t->tm_hour==24)
+					{   
+						t->tm_yday = t->tm_yday  +1 ;
+						t->tm_mday = t->tm_mday  +1 ;
+						t->tm_wday = t->tm_wday  +1 ;
+						t->tm_hour=0;
+					}
 				}
 			}
 

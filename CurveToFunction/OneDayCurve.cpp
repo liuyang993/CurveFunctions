@@ -1,7 +1,8 @@
 #include "OneDayCurve.h"
 #include "Util.h"
 #include "Timer.h"
-
+#include <iostream>
+#include <fstream>
 
 TBX_VOID
 TBCAFCliHandleMenuChoice(
@@ -244,6 +245,7 @@ OneDayCurve::OneDayCurve(int y,int m,int d,int h , int min , std::string sContra
 	
 	//这里决定是不是同时写文件
 	strcpy( CliToolsParams.szLogFileName, "tbtoolpack_service" );
+	
 	//CliToolsParams.szLogFileName[0]				= '\0';		/* CLI Tool logging to file not used with CAF */
 	
 	
@@ -253,7 +255,9 @@ OneDayCurve::OneDayCurve(int y,int m,int d,int h , int min , std::string sContra
 	CliToolsParams.fFlushLogOnlyOnError			= TBX_TRUE;	/* CLI Tool logging to file not used with CAF */
 	CliToolsParams.fLogKeepColorCodes				= TBX_FALSE;/* CLI Tool logging to file not used with CAF */
 	CliToolsParams.un32LogBufferMaxLines			= 10000;
-	CliToolsParams.un32MaxLogFileSize				= 100000;	/* CLI Tool logging to file not used with CAF */
+
+
+	CliToolsParams.un32MaxLogFileSize				= 5000000;	/* CLI Tool logging to file not used with CAF */      //5MB
 	CliToolsParams.un32MaxLogFilesPerDay			= 100;		/* CLI Tool logging to file not used with CAF */
 	CliToolsParams.fReceiveRemoteScreen			= TBX_FALSE;
 
@@ -272,7 +276,7 @@ OneDayCurve::OneDayCurve(int y,int m,int d,int h , int min , std::string sContra
 	CliToolsParams.pFctApplyUserInput		= TBCAFCliApplyUserInput;
 	CliToolsParams.pCtxApplyUserInput		= (PTBX_VOID)this;
 
-
+	CliToolsParams.fDontRotateLogFile = 0 ;
 	
 
 	TBX_RESULT Result = TbxCliToolsInit( &CliToolsParams, &hTbxCliTools );
@@ -564,6 +568,9 @@ void OneDayCurve::loadData()    //int year, int month , int day , int hour , int
 	timeinfo1->tm_year=year-1900; 
 	timeinfo1->tm_mon=month-1;
 
+	//ToDo 处理周一的情况 
+
+
 	if(hour>15)
 		timeinfo1->tm_mday =day-1;
 	else
@@ -812,6 +819,8 @@ void OneDayCurve::loadData()    //int year, int month , int day , int hour , int
 		
 #endif
 
+		judgeBuyOrSellForNickel();
+
 		//TryToFindDoubleTop();
 
 #ifdef TRADETIME
@@ -820,9 +829,8 @@ void OneDayCurve::loadData()    //int year, int month , int day , int hour , int
 		sMYSQLQueryTime = commonFuctions::GetStringFromTM(timeinfo1);
 #else
 		//Sleep(1000);
-		Sleep(10);
+		Sleep(1000);
 		commonFuctions::addSecondsToTM(timeinfo1,1);
-		//commonFuctions::addSecondsToTM(timeinfo1,300);
 		sMYSQLQueryTime = commonFuctions::GetStringFromTM(timeinfo1);
 
 #endif
@@ -904,6 +912,9 @@ double OneDayCurve::slope(const std::string sTime, std::vector<time_t>& xaxis, c
 	//if(x.size() != y.size()){
  //       throw exception("...");
  //   }
+
+	//this method come from  :  https://stackoverflow.com/questions/18939869/how-to-get-the-slope-of-a-linear-regression-line-using-c 
+
     double n = xaxis.size();
 
     double avgX = accumulate(xaxis.begin(), xaxis.end(), 0.0) / n;
@@ -924,12 +935,38 @@ double OneDayCurve::slope(const std::string sTime, std::vector<time_t>& xaxis, c
 	double dResult = numerator / denominator;
 
 
+	//TbxCliToolsLogPrint
+	//(
+	//	hTbxCliTools,
+	//	TRACE_LEVEL_3, FGREEN,
+	//	"at %s ,last 1 min slope is %f , and new is %6.2f \n" ,sTime.c_str(), dResult,yaxis[0]
+	//);
+
+	//for 2019-7-25 nickel only 
+
+	//TbxCliToolsLogPrint
+	//(
+	//	hTbxCliTools,
+	//	TRACE_LEVEL_3, FGREEN,
+	//	"at %s ,last 1 min slope is %f , and new is %6.2f , and should respond london  %6.2f \n" ,sTime.c_str(), dResult,yaxis[0], (yaxis[0] - 37640) / 5.212
+	//);
+
+
+	//char buff[20];
+	//strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&xaxis[0]));
+
+
 	TbxCliToolsLogPrint
 	(
 		hTbxCliTools,
 		TRACE_LEVEL_3, FGREEN,
-		"at %s ,last 1 min slope is %f , and new is %6.2f \n" ,sTime.c_str(), dResult,yaxis[0]
+		//"at %s ,last 1 min slope is %f , and new is %6.2f , and should respond london  %6.2f if rate is 8 \n " ,buff, dResult,yaxis[0], yaxis[0] / 8 
+		"at %s ,last 1 min slope is %f , and new is %6.2f , and should respond london  %6.2f if rate is 8 \n " ,sTime.c_str(), dResult,yaxis[0], yaxis[0] / 8 
+
+
+		
 	);
+
 
     return dResult;
 
@@ -987,11 +1024,12 @@ void OneDayCurve::judgeBuyOrSell()
 	if((BuyedPrice+5<y[0])&&(currentState==buyed))     // over 5 poing profit 
 	{
 
+		
 		TbxCliToolsLogPrint
 		(
 			hTbxCliTools,
 			TRACE_LEVEL_3, FGREEN,
-			"TradeCurve: Last time buy alreay have 5 point profit now , try to let profit fly \n "
+			"at %s TradeCurve: Last time buy alreay have 5 point profit now , try to let profit fly \n " ,sMYSQLQueryTime.c_str() 
 		);
 
 		dProfitFlyingStartSlope = currentOneMinuteSlope;
@@ -1018,18 +1056,47 @@ void OneDayCurve::judgeBuyOrSell()
 
 	if((currentOneMinuteSlope>dProfitFlyingStartSlope)&&(currentState==profitFlying))
 	{
-		dProfitFlyingStartSlope=currentOneMinuteSlope;
-		dProfitFlyingStartprice = y[0];
+		//dProfitFlyingStartSlope=currentOneMinuteSlope;
+		//dProfitFlyingStartprice = y[0];
 
 	}
 
-	if((currentOneMinuteSlope<dProfitFlyingStartSlope)&&(y[0]<dProfitFlyingStartprice)&&(currentState==profitFlying))
+	//if((currentOneMinuteSlope<dProfitFlyingStartSlope)&&(y[0]<dProfitFlyingStartprice)&&(currentState==profitFlying))
+	if((y[0]<dProfitFlyingStartprice - 50 )&&(currentState==profitFlying))
 	{
 		TbxCliToolsLogPrint
 		(
 			hTbxCliTools,
 			TRACE_LEVEL_3, FGREEN,
-			"TradeCurve: during profit flying state ,1 min slope begin down,close it \n "
+			"at %s TradeCurve: during profit flying state ,1 min slope begin down,close it \n " , sMYSQLQueryTime.c_str() 
+		);
+
+		//止盈
+		
+		//重置斜率 避免刚止盈还买的情况
+	    Last1TimeSlope=0;
+		Last2TimeSlope=0;
+		currentOneMinuteSlope=0;
+
+		
+
+#ifdef TRADETIME
+		//orderinsert(contractName.c_str(),"closebuy",y[0]-1);     //y[0] is newest price 
+
+		currentState =  none;
+#else
+		currentState =  none;
+#endif
+
+	}
+
+	if((y[0]>dProfitFlyingStartprice + 200 )&&(currentState==profitFlying))
+	{
+		TbxCliToolsLogPrint
+		(
+			hTbxCliTools,
+			TRACE_LEVEL_3, FGREEN,
+			"at %s TradeCurve: during profit flying state ,already got enough profit ,close it \n " , sMYSQLQueryTime.c_str() 
 		);
 
 		//止盈
@@ -1052,14 +1119,14 @@ void OneDayCurve::judgeBuyOrSell()
 	}
 
 
-	if((BuyedPrice-5 > y[0])&&(currentState==buyed))     // over 5 poing lose 
+	if((BuyedPrice-50 > y[0])&&(currentState==buyed))     // over 5 poing lose 
 	{
 
 		TbxCliToolsLogPrint
 		(
 			hTbxCliTools,
 			TRACE_LEVEL_3, FGREEN,
-			"TradeCurve: Last time buy alreay have 5 point lose now , will close it \n "
+			"at %s TradeCurve: Last time buy alreay have 5 point lose now , will close it \n " ,  sMYSQLQueryTime.c_str() 
 		);
 
 #ifdef TRADETIME
@@ -1105,7 +1172,7 @@ void OneDayCurve::judgeBuyOrSell()
 		(
 			hTbxCliTools,
 			TRACE_LEVEL_3, FGREEN,
-			"TradeCurve: Last time sell alreay have 5 point profit now , will close it \n "
+			"at %s  TradeCurve: Last time sell alreay have 5 point profit now , will close it \n " , sMYSQLQueryTime.c_str() 
 		);
 
 		//重置斜率 避免刚止盈还买的情况
@@ -1133,7 +1200,7 @@ void OneDayCurve::judgeBuyOrSell()
 		(
 			hTbxCliTools,
 			TRACE_LEVEL_3, FGREEN,
-			"TradeCurve: Last time sell alreay have 5 point lose now , will close it \n "
+			"at %s  TradeCurve: Last time sell alreay have 5 point lose now , will close it \n ",sMYSQLQueryTime.c_str() 
 		);
 		
 #ifdef TRADETIME	
@@ -1162,20 +1229,46 @@ void OneDayCurve::judgeBuyOrSellForNickel()
 
 	if((currentState == buying)&&(y[0]>BuyingPrice+5))
 	{
-		MyReqOrderAction();
-	
+		//MyReqOrderAction();
 	}
 
 
-	if((currentOneMinuteSlope>Last1TimeSlope)&&(Last1TimeSlope>Last2TimeSlope)&&(Last1TimeSlope!=0)&&(Last2TimeSlope!=0)&&(currentState==none))
+	if((Last2TimeSlope< -2)&&(currentState>Last1TimeSlope)&&(Last1TimeSlope>Last2TimeSlope)&&(currentState== none))    // 急跌停止点
 	{
-		//start raise , should buy
+		JiDiePoint = *std::min_element(y.begin(),y.end());
+	
 		TbxCliToolsLogPrint
 		(
 			hTbxCliTools,
 			TRACE_LEVEL_3, FGREEN,
-			"now slope :%f,last time slope :%f,last 2 time slope :%f,plan buy at %6.2f \n" , currentOneMinuteSlope,Last1TimeSlope,Last2TimeSlope,y[0]+1
+			"at %s trade notice: find jidie stop point  at %6.2f , during this JiDie process , low point is %6.2f \n " ,sMYSQLQueryTime.c_str() ,y[0],JiDiePoint
 		);
+		
+		currentState = findJiDie;
+	    //JiDiePoint = y[0];
+	}
+
+	if((currentOneMinuteSlope< -2)&&(currentState==findJiDie)&&(y[0]<JiDiePoint-100))    //2次急跌点
+	{
+		TbxCliToolsLogPrint
+		(
+			hTbxCliTools,
+			TRACE_LEVEL_3, FGREEN,
+			"at %s  trade notice: find twice jidie ,plan buy at %6.2f \n" ,sMYSQLQueryTime.c_str() ,y[0] + 10 
+		);	
+
+		 Beep( 750, 300 );
+		 
+		 
+		 char buff[100];
+		 sprintf_s(buff, "buy at :%6.2f \n", y[0] + 10);
+	  //   MessageBoxA(NULL,buff ,NULL,0);
+
+		  std::ofstream outfile;
+
+		  outfile.open("everydaySuggest.txt", std::ios_base::app);
+		  outfile << buff; 
+
 
 #ifdef TRADETIME
 		//orderinsert(contractName.c_str(),"buy",y[0]+1);     //y[0] is newest price 
@@ -1184,31 +1277,33 @@ void OneDayCurve::judgeBuyOrSellForNickel()
 
 #else
 		currentState = buyed;
-		BuyedPrice = y[0]+1;
+		breason=TwotimesJiDie;
+		BuyedPrice = y[0]+10;
+		LastBuyedPrice=BuyedPrice;
 
 #endif
-		//and in orderinsert function , will record dealRefNumber 
 	}
 
-	if((BuyedPrice+5<y[0])&&(currentState==buyed))     // over 5 poing profit 
+
+	if((BuyedPrice+ 100<y[0])&&(currentState==buyed))     // over 100 point profit 
 	{
 
 		TbxCliToolsLogPrint
 		(
 			hTbxCliTools,
 			TRACE_LEVEL_3, FGREEN,
-			"TradeCurve: Last time buy alreay have 5 point profit now , try to let profit fly \n "
+			"at %s  trade notice : Last time buy alreay have 100 profit now , try to let profit fly \n ", sMYSQLQueryTime.c_str() 
 		);
 
 		dProfitFlyingStartSlope = currentOneMinuteSlope;
 		dProfitFlyingStartprice=y[0];
 
 
-		////重置斜率 避免刚止盈还买的情况
+		//重置斜率 避免刚止盈还买的情况
 
-	 //   Last1TimeSlope=0;
-		//Last2TimeSlope=0;
-		//currentOneMinuteSlope=0;
+	    Last1TimeSlope=0;
+		Last2TimeSlope=0;
+		currentOneMinuteSlope=0;
 
 		
 #ifdef TRADETIME
@@ -1222,21 +1317,31 @@ void OneDayCurve::judgeBuyOrSellForNickel()
 	}
 	 
 
-	if((currentOneMinuteSlope>dProfitFlyingStartSlope)&&(currentState==profitFlying))
+	if((currentOneMinuteSlope>dProfitFlyingStartSlope)&&(currentState==profitCrazy))
 	{
 		dProfitFlyingStartSlope=currentOneMinuteSlope;
 		dProfitFlyingStartprice = y[0];
 
 	}
 
-	if((currentOneMinuteSlope<dProfitFlyingStartSlope)&&(y[0]<dProfitFlyingStartprice)&&(currentState==profitFlying))
+	if((currentOneMinuteSlope<dProfitFlyingStartSlope)&&(y[0]<dProfitFlyingStartprice)&&(currentState==profitCrazy))
 	{
 		TbxCliToolsLogPrint
 		(
 			hTbxCliTools,
 			TRACE_LEVEL_3, FGREEN,
-			"TradeCurve: during profit flying state ,1 min slope begin down,close it \n "
+			"at %s  trade notice: during profit crazy state , price start to drop down , close win at  %6.2f  \n " , sMYSQLQueryTime.c_str() ,y[0]
 		);
+
+		  Beep( 750, 300 );
+		  char buff[100];
+		  sprintf_s(buff, "sell at :%6.2f \n", y[0] );
+
+		  std::ofstream outfile;
+
+		  outfile.open("everydaySuggest.txt", std::ios_base::app);
+		  outfile << buff; 
+	     //MessageBoxA(NULL,buff ,NULL,0);
 
 		//止盈
 		
@@ -1245,6 +1350,51 @@ void OneDayCurve::judgeBuyOrSellForNickel()
 		Last2TimeSlope=0;
 		currentOneMinuteSlope=0;
 
+
+		BuyedPrice = 0;
+		//注意 LastBuyedPrice 没改 
+		
+
+#ifdef TRADETIME
+		//orderinsert(contractName.c_str(),"closebuy",y[0]-1);     //y[0] is newest price 
+
+		currentState =  none;
+#else
+		currentState =  none;
+#endif
+
+	}
+
+	if((y[0]<dProfitFlyingStartprice - 50)&&(currentState==profitFlying))
+	{
+		TbxCliToolsLogPrint
+		(
+			hTbxCliTools,
+			TRACE_LEVEL_3, FGREEN,
+			"at %s  trade notice: during profit flying state , price start to drop down , close win at  %6.2f  \n " , sMYSQLQueryTime.c_str() ,y[0]
+		);
+
+
+		 Beep( 750, 300 );
+		 char buff[100];
+		 sprintf_s(buff, "sell at :%6.2f \n", y[0]);
+
+		 std::ofstream outfile;
+
+		 outfile.open("everydaySuggest.txt", std::ios_base::app);
+		 outfile << buff; 
+
+
+		//止盈
+		
+		//重置斜率 避免刚止盈还买的情况
+	    Last1TimeSlope=0;
+		Last2TimeSlope=0;
+		currentOneMinuteSlope=0;
+
+
+		BuyedPrice = 0;
+		//注意 LastBuyedPrice 没改 
 		
 
 #ifdef TRADETIME
@@ -1258,15 +1408,125 @@ void OneDayCurve::judgeBuyOrSellForNickel()
 	}
 
 
-	if((BuyedPrice-5 > y[0])&&(currentState==buyed))     // over 5 poing lose 
+	if((y[0]> dProfitFlyingStartprice + 100)&&(currentState==profitFlying))
+	{
+		TbxCliToolsLogPrint
+		(
+			hTbxCliTools,
+			TRACE_LEVEL_3, FGREEN,
+			"at %s  trade notice: Enter profitCrazy state at  %6.2f  \n " , sMYSQLQueryTime.c_str() ,y[0]
+		);
+
+		dProfitFlyingStartSlope = currentOneMinuteSlope;
+		dProfitFlyingStartprice=y[0];
+
+#ifdef TRADETIME
+		//orderinsert(contractName.c_str(),"closebuy",y[0]-1);     //y[0] is newest price 
+
+		currentState =  profitCrazy;
+#else
+		currentState =  profitCrazy;
+#endif
+
+	}
+
+
+	if((y[0]<LastBuyedPrice + 50 )&&(currentState==none))    //再次回到2次急跌点的位置
+	{
+		TbxCliToolsLogPrint
+		(
+			hTbxCliTools,
+			TRACE_LEVEL_3, FGREEN,
+			"at %s  trade notice: the 2 time confirm twicw low point  at  %6.2f ,  should buy again  \n " , sMYSQLQueryTime.c_str() ,y[0]
+		);
+
+		 Beep( 750, 300 );
+		 char buff[100];
+		 sprintf_s(buff, "buy at :%6.2f \n", y[0] + 10);
+
+		  std::ofstream outfile;
+
+		  outfile.open("everydaySuggest.txt", std::ios_base::app);
+		  outfile << buff; 
+
+
+		//重置斜率 避免刚止盈还买的情况
+	    Last1TimeSlope=0;
+		Last2TimeSlope=0;
+		currentOneMinuteSlope=0;
+
+		
+		BuyedPrice = y[0];
+		LastBuyedPrice=BuyedPrice;
+		
+
+#ifdef TRADETIME
+		//orderinsert(contractName.c_str(),"closebuy",y[0]-1);     //y[0] is newest price 
+
+		currentState =  buyed;
+#else
+		currentState =  buyed;
+		breason=NearTwotimesJiDieAgain;
+#endif
+
+	}
+
+
+	if((BuyedPrice-100 > y[0])&&(currentState==buyed))     // over 5 poing lose   止损
 	{
 
 		TbxCliToolsLogPrint
 		(
 			hTbxCliTools,
 			TRACE_LEVEL_3, FGREEN,
-			"TradeCurve: Last time buy alreay have 5 point lose now , will close it \n "
+			"at %s  trade notice : Last time buy alreay have 100 point lose now , will close it at  %6.2f \n " ,sMYSQLQueryTime.c_str(), y[0] -20 
 		);
+
+		 Beep( 750, 300 );
+		 char buff[100];
+		 sprintf_s(buff, "sell at :%6.2f \n", y[0] - 20);
+	 
+
+		 std::ofstream outfile;
+
+		  outfile.open("everydaySuggest.txt", std::ios_base::app);
+		  outfile << buff; 
+
+
+		BuyedPrice = 0;
+
+		//重置斜率 
+	    Last1TimeSlope=0;
+		Last2TimeSlope=0;
+		currentOneMinuteSlope=0;
+
+		LastBuyedPrice = 0;   // 说明这个底已经失效了
+
+		if(breason==NearTwotimesJiDieAgain)
+		{
+
+				TbxCliToolsLogPrint
+				(
+					hTbxCliTools,
+					TRACE_LEVEL_3, FGREEN,
+					"at %s  trade notice : happen downbreak twotime JiDie Point  at  %6.2f , should become a seller \n " ,sMYSQLQueryTime.c_str(), y[0]
+				);
+
+		}
+
+		if(breason==TwotimesJiDie)
+		{
+
+				TbxCliToolsLogPrint
+				(
+					hTbxCliTools,
+					TRACE_LEVEL_3, FGREEN,
+					"at %s  trade notice: two time JiDie point select wrong \n " ,sMYSQLQueryTime.c_str(), y[0]
+				);
+
+		}
+
+
 
 #ifdef TRADETIME
 		
@@ -1280,23 +1540,23 @@ void OneDayCurve::judgeBuyOrSellForNickel()
 
 
 	//sell part 
-	if((currentOneMinuteSlope<Last1TimeSlope)&&(Last1TimeSlope<Last2TimeSlope)&&(Last1TimeSlope!=0)&&(Last2TimeSlope!=0)&&(currentState==none))
+	if((currentOneMinuteSlope > 2)&&(currentState==none))
 	{
 		//start raise , should buy
-		TbxCliToolsLogPrint
-		(
-			hTbxCliTools,
-			TRACE_LEVEL_3, FGREEN,
-			"now slope :%f,last time slope :%f,last 2 time slope :%f,plan sell at %6.2f \n" , currentOneMinuteSlope,Last1TimeSlope,Last2TimeSlope,y[0]-1
-		);
+		//TbxCliToolsLogPrint
+		//(
+		//	hTbxCliTools,
+		//	TRACE_LEVEL_3, FGREEN,
+		//	"now slope :%f,last time slope :%f,last 2 time slope :%f,plan sell at %6.2f \n" , currentOneMinuteSlope,Last1TimeSlope,Last2TimeSlope,y[0]-10
+		//);
 
 #ifdef TRADETIME
 		//orderinsert(contractName.c_str(),"sell",y[0]-1);     //y[0] is newest price 
 		//currentState = selling;
 		//SellingPrice = y[0]-1;
 #else
-		currentState = selled;
-		SelledPrice = y[0]-1;
+		//currentState = selled;
+		//SelledPrice = y[0]-10;
 #endif
 
 
@@ -1304,21 +1564,21 @@ void OneDayCurve::judgeBuyOrSellForNickel()
 	}
 
 
-	if((SelledPrice>y[0]+5)&&(currentState==selled))     // over 5 poing profit 
+	if((SelledPrice>y[0]+100)&&(currentState==selled))     // over 5 poing profit 
 	{
 
-		TbxCliToolsLogPrint
-		(
-			hTbxCliTools,
-			TRACE_LEVEL_3, FGREEN,
-			"TradeCurve: Last time sell alreay have 5 point profit now , will close it \n "
-		);
+		//TbxCliToolsLogPrint
+		//(
+		//	hTbxCliTools,
+		//	TRACE_LEVEL_3, FGREEN,
+		//	"TradeCurve: Last time sell alreay have 100 point profit now , will close it at  %6.2f  \n " , y[0] + 10
+		//);
 
-		//重置斜率 避免刚止盈还买的情况
+		////重置斜率 避免刚止盈还买的情况
 
-	    Last1TimeSlope=0;
-		Last2TimeSlope=0;
-		currentOneMinuteSlope=0;
+	 //   Last1TimeSlope=0;
+		//Last2TimeSlope=0;
+		//currentOneMinuteSlope=0;
 
 
 #ifdef TRADETIME		
@@ -1326,27 +1586,27 @@ void OneDayCurve::judgeBuyOrSellForNickel()
 
 		currentState =  none;
 #else
-		currentState =  none;
+		//currentState =  none;
 #endif
 
 	}
 
 
-	if((SelledPrice+5 < y[0])&&(currentState==selled))     // over 5 poing lose 
+	if((SelledPrice+ 100 < y[0])&&(currentState==selled))     // over 5 poing lose 
 	{
 
-		TbxCliToolsLogPrint
-		(
-			hTbxCliTools,
-			TRACE_LEVEL_3, FGREEN,
-			"TradeCurve: Last time sell alreay have 5 point lose now , will close it \n "
-		);
+		//TbxCliToolsLogPrint
+		//(
+		//	hTbxCliTools,
+		//	TRACE_LEVEL_3, FGREEN,
+		//	"TradeCurve: Last time sell alreay have 5 point lose now , will close it at  %6.2f \n " ,y[0] +10
+		//);
 		
 #ifdef TRADETIME	
 		//orderinsert(contractName.c_str(),"closesell",y[0]+1);     //y[0] is newest price 
 		currentState =  none;
 #else
-		currentState =  none;
+		//currentState =  none;
 #endif
 
 	}

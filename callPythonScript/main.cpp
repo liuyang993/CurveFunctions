@@ -1,5 +1,7 @@
 #define PY_SSIZE_T_CLEAN
 
+
+// ±‹√‚¡¥Ω” ±’“ pythod_d.lib
 #ifdef _DEBUG
   #undef _DEBUG
   #include <python.h>
@@ -111,7 +113,11 @@ int main()
     //    printf("% 0.2f % 0.2f\n", x, call_func(pow_func, x, 2.0)); 
     //} 
 
-	call_func(pow_func,1.0,1.0);
+
+	//double p1 [3] = { 10, 20, 30 };
+	//double p2 [3] = { 40, 50, 60 };
+
+	call_func(pow_func,1.0,2.0);
           
     Py_DECREF(pow_func); 
     Py_Finalize(); 

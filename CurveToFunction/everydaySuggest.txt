@@ -1,0 +1,28 @@
+buy at :124070.00 
+sell at :124120.00 
+buy at :124120.00 
+sell at :124160.00 
+buy at :124150.00 
+sell at :124010.00 
+buy at :124030.00 
+sell at :124080.00 
+buy at :124080.00 
+sell at :124120.00 
+buy at :124110.00 
+sell at :123940.00 
+buy at :126570.00 
+
+---------------8.16 Ôç
+sell at :126440.00 
+buy at :126250.00 
+sell at :126290.00 
+buy at :126300.00 
+sell at :126530.00 
+buy at :126340.00 
+sell at :126200.00 
+buy at :126100.00 
+sell at :126150.00 
+buy at :126150.00 
+sell at :126300.00 
+buy at :126190.00 
+sell at :126030.00 
